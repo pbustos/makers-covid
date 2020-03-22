@@ -8,6 +8,7 @@ import geocoder
 import sys
 from tinydb import TinyDB, Query
 import itertools as it
+import json
 
 
 # If modifying these scopes, delete the file token.pickle.
@@ -23,6 +24,7 @@ def main():
     db = TinyDB('corona.json')
     makers = db.table('makers')
     consumers = db.table('consumers')
+    query = Query();
 
     ## Initialize Sheets API
     creds = None
@@ -59,16 +61,16 @@ def main():
         entregadas = [item for sublist in values['valueRanges'][3]['values'] for item in sublist]
         direccion = [item for sublist in values['valueRanges'][4]['values'] for item in sublist]
         
-    
     for n,c,s,e,d in it.zip_longest(nombres,capacidad,stock,entregadas,direccion):
-        makers.insert({'nombre':n, 'capacidad':c, 'stock':s, 'entregadas':e, 'direccion':d})
-        print(n,c,s,e,d)
-        print(makers.all())
-
+        makers.upsert({'nombre':n, 'capacidad':c, 'stock':s, 'entregadas':e, 'direccion':d}, query.nombre == n)
+       
+    for r in makers.all():
+        print(r)
+    print("Total:", len(makers))
+    
 
             #g = geocoder.google(row[0], output="all", key="AIzaSyDh3w5epHrNhgdBhDa8Egt3Ydt1kLlocmE")
             #print(row[0], g.latlng)
         
 if __name__ == '__main__':
     main()
-
