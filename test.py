@@ -108,7 +108,7 @@ class SpreadsheetCrawler:
             self.sheet = self.spreadsheet.worksheet(sheet)
 
     def update_stock(self):
-        self.update_subtable(STOCK_COLUMN_RANGE,STOCK_INITIAL_ROW)
+        return self.update_subtable(STOCK_COLUMN_RANGE,STOCK_INITIAL_ROW)
 
     def update_demand(self):
         return self.update_subtable(DEMAND_COLUMN_RANGE,DEMAND_INITIAL_ROW)
