@@ -2,6 +2,8 @@ import gspread
 import pickle
 import os.path
 import itertools as it
+import copy
+import json
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -42,7 +44,7 @@ gc = gspread.authorize(mycreds)
 makers_sheet = gc.open_by_url('https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701')
 #print(makers_sheet.worksheets())
 
-caceres = makers_sheet.get_worksheet(9)
+caceres = makers_sheet.get_worksheet(7)
 print(caceres)
 stock = dict()
 
@@ -51,20 +53,15 @@ stock_cols_numbers = range(2,7)
 
 for c,n in it.zip_longest(stock_cols_names,stock_cols_numbers):
     name = str(caceres.acell(c).value)
-    print(c,n)
     stock[name] = caceres.col_values(n)[4:-1]
 
-print(stock)
+stockA = copy.deepcopy(stock)
+stockA['Capacidad diaria'][0] = 100
+common_pairs = {key: stock[key] for key in stock if key in stockA and stock[key] != stockA[key]}
+#print (common_pairs)
+print(json.dumps(common_pairs,sort_keys=True, indent=4))
+
     
-
-# user = caceres.acell('B4').value
-# capacidad = caceres.acell('C4').value
-# stock_actual = caceres.acell('D4').value
-# entregadas = capacidad = caceres.acell('E4').value
-# direccion = capacidad = caceres.acell('F4').value
-
-# capacidad = caceres.acell('B4').value
-
 
 
 

@@ -1,9 +1,11 @@
 from __future__ import print_function
-
 import os.path
 import pickle
-from pprint import pprint
-
+import threading
+import time
+import json
+from flask import Flask, render_template
+from flask_socketio import SocketIO, emit, send
 import gspread
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -21,6 +23,23 @@ STOCK_HEADERS_MAP = {"Usuario Telegram": "usuario"}
 DEMAND_INITIAL_ROW = 4
 DEMAND_COLUMN_RANGE = ['H','K']
 DEMAND_HEADERS_MAP = {"Organización": "usuario"}
+
+app = Flask(__name__)
+app.debug = False
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
+READY = False
+
+@socketio.on('connect')
+def handle_connection():
+    #print('New connection: ')
+    with open('data.json') as file:
+        data = json.load(file)
+        socketio.emit('connection_response', {'data': data})
+
+def update(update):
+    print("Broadcasting update")
+    socketio.emit('update', { "data" : update}, broadcast=True)
 
 class MyCredentials (object):
     def __init__ (self, access_token=None):
@@ -77,13 +96,13 @@ def clean_and_map_header(header, map):
         new_header = map[new_header]
     return new_header.lower()
 
-class SpreadsheetCrawler:
+class SpreadsheetCrawler(threading.Thread):
     def __init__(self):
         # Persistence
+        super().__init__()
         self.__credentials = None
         self.__spreadsheet = None
         self.__conn = None
-
 
     @property
     def spreadsheet(self):
@@ -131,15 +150,29 @@ class SpreadsheetCrawler:
                 json[row_values[0]]= (row_dict)
         return json
 
+    def run(self):
+        while(True):
+            if READY:
+                print("Hola")
+                with app.test_request_context(): 
+                    update("Hola")
+            time.sleep(1)
+            
+
+
 
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
+    crawl.start()
+    READY = True
+    socketio.run(app, port=8000)
 
-    crawl.change_sheet("Caceres")
-    final_json = {}
-    final_json["demand"] = crawl.update_demand()
-    final_json["makers"] = crawl.update_stock()
-    import json
-    with open('data.json', 'w') as fp:
-        json.dump(final_json, fp)
-    pprint(final_json)
+    # print("despues")
+    # crawl.change_sheet("Caceres")
+    # final_json = {}
+    # final_json["demand"] = crawl.update_demand()
+    # final_json["makers"] = crawl.update_stock()
+    # import json
+    # with open('data.json', 'w') as fp:
+    #     json.dump(final_json, fp)
+    # pprint(final_json)
