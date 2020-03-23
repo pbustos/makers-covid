@@ -1,6 +1,7 @@
 import gspread
 import pickle
 import os.path
+import itertools as it
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -43,15 +44,26 @@ makers_sheet = gc.open_by_url('https://docs.google.com/spreadsheets/d/1uWdmNRFeJ
 
 caceres = makers_sheet.get_worksheet(9)
 print(caceres)
-stock = str(caceres.acell('B3').value)
-#"{" + stock + ": { " + user + ":"}
-user = caceres.acell('B4').value
-capacidad = caceres.acell('C4').value
-stock_actual = caceres.acell('D4').value
-entregadas = capacidad = caceres.acell('E4').value
-direccion = capacidad = caceres.acell('F4').value
+stock = dict()
 
-capacidad = caceres.acell('B4').value
+stock_cols_names = ('B4','C4','D4','E4','F4')
+stock_cols_numbers = range(2,7)
+
+for c,n in it.zip_longest(stock_cols_names,stock_cols_numbers):
+    name = str(caceres.acell(c).value)
+    print(c,n)
+    stock[name] = caceres.col_values(n)[4:-1]
+
+print(stock)
+    
+
+# user = caceres.acell('B4').value
+# capacidad = caceres.acell('C4').value
+# stock_actual = caceres.acell('D4').value
+# entregadas = capacidad = caceres.acell('E4').value
+# direccion = capacidad = caceres.acell('F4').value
+
+# capacidad = caceres.acell('B4').value
 
 
 
