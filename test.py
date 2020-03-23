@@ -73,7 +73,7 @@ class SpreadsheetCrawler:
                 print('No data found.')
             else:
                 nombres = [item for sublist in values['valueRanges'][0]['values'] for item in sublist]
-                capacidad = [item for sublist in values['valueRanges'][1]['values'] for item in sublist]
+                capacidad = [item if len(item) > 0 else '0' for sublist in values['valueRanges'][1]['values'] for item in sublist]
                 stock = [item for sublist in values['valueRanges'][2]['values'] for item in sublist]
                 entregadas = [item for sublist in values['valueRanges'][3]['values'] for item in sublist]
                 direccion = [item for sublist in values['valueRanges'][4]['values'] for item in sublist]
@@ -89,3 +89,4 @@ class SpreadsheetCrawler:
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
     crawl.update_stock()
+    crawl.update_demand()
