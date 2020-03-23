@@ -1,7 +1,10 @@
 from __future__ import print_function
+
+import operator
 import pickle
 import os.path
 from collections import defaultdict
+from pprint import pprint
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -19,6 +22,8 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 # The ID and range of a sample spreadsheet.
 
 SPREAD_SHEET_URL = "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701"
+STOCK_INITIAL_ROW = 4
+STOCK_COLUMN_RANGE = ['B','F']
 
 class MyCredentials (object):
     def __init__ (self, access_token=None):
@@ -47,6 +52,22 @@ class MyCredentials (object):
             with open('token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
         return creds
+
+def char_range(from_to, row=None):
+    c1 = from_to[0]
+    c2 = from_to[1]
+    char_range = []
+    for c in range(ord(c1), ord(c2)+1):
+        if row is not None:
+            char_range.append(chr(c)+str(row))
+        else:
+            char_range.append(chr(c))
+    return char_range
+
+def char_to_index(char):
+    char = char.upper()
+    index = ord(char)-ord('A')+1
+    return index
 
     
 class SpreadsheetCrawler:
@@ -84,30 +105,15 @@ class SpreadsheetCrawler:
             self.sheet = self.spreadsheet.worksheet(sheet)
 
     def update_stock(self):
-        headers = self.sheet.range('B4:F4')
-        values = self.sheet.range('B5:F100')
-        print(headers)
-        print(values)
-        # if self.sheet is not None:
-        #     values = self.sheet.values().batchGet(spreadsheetId=SAMPLE_SPREADSHEET_ID,
-        #                                      ranges=["Caceres!B5:B100", "Caceres!C5:C100", "Caceres!D5:D100",
-        #                                              "Caceres!E5:E100", "Caceres!F5:F100"]).execute()
-        #
-        #     if not values:
-        #         print('No data found.')
-        #     else:
-        #         nombres = [item for sublist in values['valueRanges'][0]['values'] for item in sublist]
-        #         capacidad = [item for sublist in values['valueRanges'][1]['values'] for item in sublist]
-        #         stock = [item for sublist in values['valueRanges'][2]['values'] for item in sublist]
-        #         entregadas = [item for sublist in values['valueRanges'][3]['values'] for item in sublist]
-        #         direccion = [item for sublist in values['valueRanges'][4]['values'] for item in sublist]
-        #
-        #     for n, c, s, e, d in it.zip_longest(nombres, capacidad, stock, entregadas, direccion):
-        #         self.makers.upsert({'nombre': n, 'capacidad': c, 'stock': s, 'entregadas': e, 'direccion': d}, self.query.nombre == n)
-        #
-        #     for r in self.makers.all():
-        #         print(r)
-        #     print("Total:", len(self.makers))
+        stock_cols_names = char_range(STOCK_COLUMN_RANGE,STOCK_INITIAL_ROW)
+        stock_cols_numbers = map(char_to_index, char_range(STOCK_COLUMN_RANGE))
+        stock = defaultdict(list)
+        for c, n in it.zip_longest(stock_cols_names, stock_cols_numbers):
+            name = str(self.sheet.acell(c).value)
+            print(c, n)
+            stock[name] = self.sheet.col_values(n)[STOCK_INITIAL_ROW:-1]
+        pprint(stock)
+
 
 
 if __name__ == '__main__':
