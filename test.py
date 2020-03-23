@@ -3,7 +3,7 @@ from __future__ import print_function
 import operator
 import pickle
 import os.path
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from pprint import pprint
 
 from googleapiclient.discovery import build
@@ -34,7 +34,7 @@ class MyCredentials (object):
 
     def refresh (self, http):
         self.access_token = self.readCredentials('credentials.json').token
-    
+
     def readCredentials(self, file_name):
         ## Initialize Sheets API
         creds = None
@@ -72,7 +72,11 @@ def char_to_index(char):
     index = ord(char)-ord('A')+1
     return index
 
-    
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
 class SpreadsheetCrawler:
     def __init__(self):
         # Persistence
@@ -114,19 +118,28 @@ class SpreadsheetCrawler:
         return self.update_subtable(DEMAND_COLUMN_RANGE,DEMAND_INITIAL_ROW)
 
     def update_subtable(self, column_range, initial_row):
-        cols_names = char_range(column_range, initial_row)
-        cols_numbers = map(char_to_index, char_range(column_range))
-        data = defaultdict(list)
-        for c, n in it.zip_longest(cols_names, cols_numbers):
-            name = str(self.sheet.acell(c).value)
-            print(c, n)
-            data[name] = self.sheet.col_values(n)[initial_row:-1]
-        pprint(data)
-        return data
-
+        header_range = column_range[0]+str(initial_row)+":"+column_range[-1]+str(initial_row)
+        data_range = column_range[0]+str(initial_row+1)+":"+column_range[-1]+str(1000)
+        headers = self.sheet.range(header_range)
+        header_values = list(map(lambda x: x.value.strip(), headers))
+        data = self.sheet.range(data_range)
+        json = []
+        for row in chunks(data,len(char_range(column_range))):
+            row_values = list(map(lambda x: x.value.strip(), row))
+            if row_values[0] != '':
+                row_dict = OrderedDict(zip(header_values,row_values))
+                row_dict["Localidad"] = self.sheet.title
+                row_dict["lat"] = ""
+                row_dict["long"] = ""
+                json.append(row_dict)
+        return json
 
 
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
+
     crawl.change_sheet("Caceres")
-    crawl.update_demand()
+    json = {}
+    json["demand"] = crawl.update_demand()
+    json["makers"] = crawl.update_stock()
+    pprint(json)
