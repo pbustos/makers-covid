@@ -69,8 +69,6 @@ def main():
     print("Total:", len(makers))
     
 
-            #g = geocoder.google(row[0], output="all", key="AIzaSyDh3w5epHrNhgdBhDa8Egt3Ydt1kLlocmE")
-            #print(row[0], g.latlng)
         
 if __name__ == '__main__':
     main()
