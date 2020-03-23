@@ -15,17 +15,10 @@ import json
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = '1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ'
-SAMPLE_RANGE_NAME = 'Caceres!B5:F5'
+SPREADSHEET_ID = '1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ'
+RANGES_NAME = ["Caceres!B5:B100","Caceres!C5:C100","Caceres!D5:D100","Caceres!E5:E100","Caceres!F5:F100"]
 
-def main():
-
-    # Persistence
-    db = TinyDB('corona.json')
-    makers = db.table('makers')
-    consumers = db.table('consumers')
-    query = Query();
-
+def readCredentials(file_name):
     ## Initialize Sheets API
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
@@ -39,24 +32,34 @@ def main():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(file_name, SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
-
     service = build('sheets', 'v4', credentials=creds)
+    return service
 
+def main():
+
+    # Persistence
+    db = TinyDB('corona.json')
+    makers = db.table('makers')
+    consumers = db.table('consumers')
+    query = Query();
+
+    ## Read Google credentials and build service
+    service = readCredentials('credentials.json')
+    
     # Call the Sheets API
     sheet = service.spreadsheets()
-    values = sheet.values().batchGet(spreadsheetId=SAMPLE_SPREADSHEET_ID, ranges=["Caceres!B5:B100","Caceres!C5:C100","Caceres!D5:D100","Caceres!E5:E100","Caceres!F5:F100"]).execute()
+    values = sheet.values().batchGet(spreadsheetId=SPREADSHEET_ID, ranges=RANGES_NAME).execute()
 
     if not values:
         print('No data found.')
     else:
         nombres = [item for sublist in values['valueRanges'][0]['values'] for item in sublist]
-        capacidad = [item for sublist in values['valueRanges'][1]['values'] for item in sublist]
+        capacidad = [int(item) for sublist in values['valueRanges'][1]['values'] for item in sublist]
         stock = [item for sublist in values['valueRanges'][2]['values'] for item in sublist]
         entregadas = [item for sublist in values['valueRanges'][3]['values'] for item in sublist]
         direccion = [item for sublist in values['valueRanges'][4]['values'] for item in sublist]
