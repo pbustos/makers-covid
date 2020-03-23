@@ -111,7 +111,7 @@ class SpreadsheetCrawler:
         headers = self.sheet.range(header_range)
         header_values = list(map(lambda x: x.value.strip(), headers))
         data = self.sheet.range(data_range)
-        json = []
+        json = {}
         for row in chunks(data,len(char_range(column_range))):
             row_values = list(map(lambda x: x.value.strip(), row))
             if row_values[0] != '':
@@ -119,7 +119,7 @@ class SpreadsheetCrawler:
                 row_dict["Localidad"] = self.sheet.title
                 row_dict["lat"] = ""
                 row_dict["long"] = ""
-                json.append(row_dict)
+                json[row_values[0]]= (row_dict)
         return json
 
 
