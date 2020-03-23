@@ -15,6 +15,7 @@ import json
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID and range of a sample spreadsheet.
+
 SAMPLE_SPREADSHEET_ID = '1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ'
 SAMPLE_RANGE_NAME = 'Caceres!B5:F5'
 
@@ -83,6 +84,7 @@ class SpreadsheetCrawler:
             for r in self.makers.all():
                 print(r)
             print("Total:", len(self.makers))
+
 
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
