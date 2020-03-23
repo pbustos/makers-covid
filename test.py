@@ -16,9 +16,11 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 SPREAD_SHEET_URL = "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701"
 STOCK_INITIAL_ROW = 4
 STOCK_COLUMN_RANGE = ['B','F']
+STOCK_HEADERS_MAP = {"Usuario Telegram": "usuario"}
 
 DEMAND_INITIAL_ROW = 4
 DEMAND_COLUMN_RANGE = ['H','K']
+DEMAND_HEADERS_MAP = {"Organización": "usuario"}
 
 class MyCredentials (object):
     def __init__ (self, access_token=None):
@@ -69,6 +71,12 @@ def chunks(lst, n):
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
+def clean_and_map_header(header, map):
+    new_header = header.strip()
+    if new_header in map:
+        new_header = map[new_header]
+    return new_header.lower()
+
 class SpreadsheetCrawler:
     def __init__(self):
         # Persistence
@@ -100,18 +108,19 @@ class SpreadsheetCrawler:
             self.sheet = self.spreadsheet.worksheet(sheet)
 
     def update_stock(self):
-        return self.update_subtable(STOCK_COLUMN_RANGE,STOCK_INITIAL_ROW)
+        return self.update_subtable(STOCK_COLUMN_RANGE,STOCK_INITIAL_ROW, STOCK_HEADERS_MAP)
 
     def update_demand(self):
-        return self.update_subtable(DEMAND_COLUMN_RANGE,DEMAND_INITIAL_ROW)
+        return self.update_subtable(DEMAND_COLUMN_RANGE,DEMAND_INITIAL_ROW, DEMAND_HEADERS_MAP)
 
-    def update_subtable(self, column_range, initial_row):
+
+    def update_subtable(self, column_range, initial_row, headers_mapping):
         header_range = column_range[0]+str(initial_row)+":"+column_range[-1]+str(initial_row)
         data_range = column_range[0]+str(initial_row+1)+":"+column_range[-1]+str(1000)
         headers = self.sheet.range(header_range)
-        header_values = list(map(lambda x: x.value.strip(), headers))
+        header_values = list(map(lambda x: clean_and_map_header(x.value, headers_mapping), headers))
         data = self.sheet.range(data_range)
-        json = []
+        json = {}
         for row in chunks(data,len(char_range(column_range))):
             row_values = list(map(lambda x: x.value.strip(), row))
             if row_values[0] != '':
@@ -119,7 +128,7 @@ class SpreadsheetCrawler:
                 row_dict["Localidad"] = self.sheet.title
                 row_dict["lat"] = ""
                 row_dict["long"] = ""
-                json.append(row_dict)
+                json[row_values[0]]= (row_dict)
         return json
 
 

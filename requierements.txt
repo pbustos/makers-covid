@@ -2,4 +2,5 @@ geocoder
 tinydb
 google-api-python-client 
 gspread
+flask-socketio
 socketIO-client
