@@ -25,6 +25,9 @@ SPREAD_SHEET_URL = "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAod
 STOCK_INITIAL_ROW = 4
 STOCK_COLUMN_RANGE = ['B','F']
 
+DEMAND_INITIAL_ROW = 4
+DEMAND_COLUMN_RANGE = ['H','K']
+
 class MyCredentials (object):
     def __init__ (self, access_token=None):
         self.access_token = access_token
@@ -105,18 +108,25 @@ class SpreadsheetCrawler:
             self.sheet = self.spreadsheet.worksheet(sheet)
 
     def update_stock(self):
-        stock_cols_names = char_range(STOCK_COLUMN_RANGE,STOCK_INITIAL_ROW)
-        stock_cols_numbers = map(char_to_index, char_range(STOCK_COLUMN_RANGE))
-        stock = defaultdict(list)
-        for c, n in it.zip_longest(stock_cols_names, stock_cols_numbers):
+        self.update_subtable(STOCK_COLUMN_RANGE,STOCK_INITIAL_ROW)
+
+    def update_demand(self):
+        return self.update_subtable(DEMAND_COLUMN_RANGE,DEMAND_INITIAL_ROW)
+
+    def update_subtable(self, column_range, initial_row):
+        cols_names = char_range(column_range, initial_row)
+        cols_numbers = map(char_to_index, char_range(column_range))
+        data = defaultdict(list)
+        for c, n in it.zip_longest(cols_names, cols_numbers):
             name = str(self.sheet.acell(c).value)
             print(c, n)
-            stock[name] = self.sheet.col_values(n)[STOCK_INITIAL_ROW:-1]
-        pprint(stock)
+            data[name] = self.sheet.col_values(n)[initial_row:-1]
+        pprint(data)
+        return data
 
 
 
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
     crawl.change_sheet("Caceres")
-    crawl.update_stock()
+    crawl.update_demand()
