@@ -36,7 +36,6 @@ socketio = SocketIO(app)
 
 @socketio.on('connect')
 def handle_connection():
-    #print('New connection: ')
     with open('data.json') as file:
         data = json.load(file)
         socketio.emit('connection_response', {'data': data})
@@ -184,13 +183,13 @@ class SpreadsheetCrawler(threading.Thread):
             self.update_all()
             with app.test_request_context(): 
                 update("Envía por aquí lo que necesites")
-        time.sleep(30)
+            time.sleep(10)
 
 
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
     crawl.start()
-    socketio.run(app, port=8000)
+    socketio.run(app, port=8000, log_output=False, debug=False)
 
     # print("despues")
     # crawl.change_sheet("Caceres")

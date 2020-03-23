@@ -69,15 +69,6 @@
                         "lat": "",
                         "long": ""
                     },
-                    "residencia miajadas": {
-                        "usuario": "residencia miajadas",
-                        "cantidad necesaria actual": "15",
-                        "entregadas": "",
-                        "persona de contacto": "",
-                        "Localidad": "Caceres",
-                        "lat": "",
-                        "long": ""
-                    },
                     "Sanitarios Casar CC": {
                         "usuario": "Sanitarios Casar CC",
                         "cantidad necesaria actual": "35",
@@ -161,8 +152,8 @@
                     },
                     "Cl\u00ednica San Francisco C\u00e1ceres": {
                         "usuario": "Cl\u00ednica San Francisco C\u00e1ceres",
-                        "cantidad necesaria actual": "50",
-                        "entregadas": "",
+                        "cantidad necesaria actual": "30",
+                        "entregadas": "20",
                         "persona de contacto": "678550647",
                         "Localidad": "Caceres",
                         "lat": "",
@@ -170,8 +161,8 @@
                     },
                     "Polic\u00eda Local C\u00e1ceres": {
                         "usuario": "Polic\u00eda Local C\u00e1ceres",
-                        "cantidad necesaria actual": "198",
-                        "entregadas": "2",
+                        "cantidad necesaria actual": "146",
+                        "entregadas": "54",
                         "persona de contacto": "Bene  610 49 01 72",
                         "Localidad": "Caceres",
                         "lat": "",
@@ -348,8 +339,8 @@
                         "lat": "",
                         "long": ""
                     },
-                    "neumologia san pedro": {
-                        "usuario": "neumologia san pedro",
+                    "neumologia san pedro sin gomas ni acetato": {
+                        "usuario": "neumologia san pedro sin gomas ni acetato",
                         "cantidad necesaria actual": "30",
                         "entregadas": "",
                         "persona de contacto": "661687670",
@@ -482,6 +473,24 @@
                         "Localidad": "Caceres",
                         "lat": "",
                         "long": ""
+                    },
+                    "Centro salud aldea moret": {
+                        "usuario": "Centro salud aldea moret",
+                        "cantidad necesaria actual": "3",
+                        "entregadas": "",
+                        "persona de contacto": "927235141",
+                        "Localidad": "Caceres",
+                        "lat": "",
+                        "long": ""
+                    },
+                    "casa familiar virgen de la monta\u00f1a": {
+                        "usuario": "casa familiar virgen de la monta\u00f1a",
+                        "cantidad necesaria actual": "30",
+                        "entregadas": "",
+                        "persona de contacto": "638465912",
+                        "Localidad": "Caceres",
+                        "lat": "",
+                        "long": ""
                     }
                 }
             ],
@@ -511,8 +520,8 @@
                     "Andr\u00e9s(C\u00e1ceres)": {
                         "usuario": "Andr\u00e9s(C\u00e1ceres)",
                         "capacidad diaria": "",
-                        "cantidad actual": "26",
-                        "entregadas": "35",
+                        "cantidad actual": "31",
+                        "entregadas": "39",
                         "direcci\u00f3n": "3D C\u00e1ceres Impresionado",
                         "Localidad": "Caceres",
                         "lat": "",
@@ -571,8 +580,8 @@
                     "Raul @chaketina": {
                         "usuario": "Raul @chaketina",
                         "capacidad diaria": "",
-                        "cantidad actual": "7",
-                        "entregadas": "7",
+                        "cantidad actual": "0",
+                        "entregadas": "27",
                         "direcci\u00f3n": "caceres ( nuevo caceres)",
                         "Localidad": "Caceres",
                         "lat": "",
@@ -671,7 +680,7 @@
                     "@rolmobile": {
                         "usuario": "@rolmobile",
                         "capacidad diaria": "",
-                        "cantidad actual": "",
+                        "cantidad actual": "16",
                         "entregadas": "",
                         "direcci\u00f3n": "RolMobile urbanizacion la ca\u00f1ada",
                         "Localidad": "Caceres",
