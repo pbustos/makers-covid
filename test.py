@@ -7,6 +7,7 @@ import json
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit, send
 import gspread
+import dictdiffer
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -16,19 +17,22 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 # The ID and range of a sample spreadsheet.
 
 SPREAD_SHEET_URL = "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701"
-STOCK_INITIAL_ROW = 4
-STOCK_COLUMN_RANGE = ['B','F']
-STOCK_HEADERS_MAP = {"Usuario Telegram": "usuario"}
 
-DEMAND_INITIAL_ROW = 4
-DEMAND_COLUMN_RANGE = ['H','K']
-DEMAND_HEADERS_MAP = {"Organización": "usuario"}
+SHEET_DATA = {
+    "Caceres": {
+        "STOCK_INITIAL_ROW": 4,
+        "STOCK_COLUMN_RANGE": ['B','F'],
+        "STOCK_HEADERS_MAP": {"Usuario Telegram": "usuario"},
+        "DEMAND_INITIAL_ROW": 4,
+        "DEMAND_COLUMN_RANGE": ['H','K'],
+        "DEMAND_HEADERS_MAP": {"Organización": "usuario"}
+    }
+}
 
 app = Flask(__name__)
 app.debug = False
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
-READY = False
 
 @socketio.on('connect')
 def handle_connection():
@@ -103,6 +107,7 @@ class SpreadsheetCrawler(threading.Thread):
         self.__credentials = None
         self.__spreadsheet = None
         self.__conn = None
+        self.__current_json = {}
 
     @property
     def spreadsheet(self):
@@ -127,10 +132,16 @@ class SpreadsheetCrawler(threading.Thread):
             self.sheet = self.spreadsheet.worksheet(sheet)
 
     def update_stock(self):
-        return self.update_subtable(STOCK_COLUMN_RANGE,STOCK_INITIAL_ROW, STOCK_HEADERS_MAP)
+        stock_column_range = SHEET_DATA[self.sheet.title]["STOCK_COLUMN_RANGE"]
+        stock_initial_column = SHEET_DATA[self.sheet.title]["STOCK_INITIAL_ROW"]
+        stock_headers_map = SHEET_DATA[self.sheet.title]["STOCK_HEADERS_MAP"]
+        return self.update_subtable(stock_column_range,stock_initial_column, stock_headers_map)
 
     def update_demand(self):
-        return self.update_subtable(DEMAND_COLUMN_RANGE,DEMAND_INITIAL_ROW, DEMAND_HEADERS_MAP)
+        demand_column_range = SHEET_DATA[self.sheet.title]["DEMAND_COLUMN_RANGE"]
+        demand_initial_column = SHEET_DATA[self.sheet.title]["DEMAND_INITIAL_ROW"]
+        demand_headers_map = SHEET_DATA[self.sheet.title]["DEMAND_HEADERS_MAP"]
+        return self.update_subtable(demand_column_range, demand_initial_column, demand_headers_map)
 
 
     def update_subtable(self, column_range, initial_row, headers_mapping):
@@ -149,22 +160,36 @@ class SpreadsheetCrawler(threading.Thread):
                 row_dict["long"] = ""
                 json[row_values[0]]= (row_dict)
         return json
+            
+    def update_all(self):
+        for table in SHEET_DATA.keys():
+            self.change_sheet(table)
+            final_json = {}
+            final_json["demand"] = self.update_demand()
+            final_json["makers"] = self.update_stock()
+            diff_result = dictdiffer.diff(self.__current_json, final_json, dot_notation=False)
+            list_diff_result = list(diff_result)
+            if len(list_diff_result) > 0:
+                self.__current_json = final_json
+                print("send update")
+                print(list_diff_result)
+                with open('data.json', 'w') as outfile:
+                    json.dump(final_json, outfile, indent=4)
+                with open('last_update.json', 'w') as outfile:
+                    json.dump(list_diff_result, outfile, indent=4)
 
     def run(self):
         while(True):
-            if READY:
-                print("Hola")
-                with app.test_request_context(): 
-                    update("Hola")
-            time.sleep(1)
-            
-
+            print("compute")
+            self.update_all()
+            with app.test_request_context(): 
+                update("Envía por aquí lo que necesites")
+        time.sleep(30)
 
 
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
     crawl.start()
-    READY = True
     socketio.run(app, port=8000)
 
     # print("despues")

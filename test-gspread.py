@@ -51,6 +51,8 @@ stock = dict()
 stock_cols_names = ('B4','C4','D4','E4','F4')
 stock_cols_numbers = range(2,7)
 
+
+
 for c,n in it.zip_longest(stock_cols_names,stock_cols_numbers):
     name = str(caceres.acell(c).value)
     stock[name] = caceres.col_values(n)[4:-1]
