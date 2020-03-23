@@ -36,7 +36,12 @@ socketio = SocketIO(app)
 
 @socketio.on('connect')
 def handle_connection():
+<<<<<<< HEAD
     with open('data.json') as file:
+=======
+    #print('New connection: ')
+    with open('last_update.json') as file:
+>>>>>>> ed2950a3b7a699a3137a395aafc045721f5d8554
         data = json.load(file)
         socketio.emit('connection_response', {'data': data})
 
@@ -170,7 +175,8 @@ class SpreadsheetCrawler(threading.Thread):
             list_diff_result = list(diff_result)
             if len(list_diff_result) > 0:
                 self.__current_json = final_json
-                print("send update")
+                with app.test_request_context():
+                    update(list_diff_result)
                 print(list_diff_result)
                 with open('data.json', 'w') as outfile:
                     json.dump(final_json, outfile, indent=4)
