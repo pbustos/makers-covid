@@ -1,20 +1,12 @@
 from __future__ import print_function
 
-import operator
-import pickle
 import os.path
-from collections import defaultdict, OrderedDict
+import pickle
 from pprint import pprint
 
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-# import geocoder
-import sys
-from tinydb import TinyDB, Query
-import itertools as it
-import json
 import gspread
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -80,11 +72,7 @@ def chunks(lst, n):
 class SpreadsheetCrawler:
     def __init__(self):
         # Persistence
-        self.db = TinyDB('corona.json')
-        self.makers = self.db.table('makers')
-        self.consumers = self.db.table('consumers')
         self.__credentials = None
-        self.query = Query()
         self.__spreadsheet = None
         self.__conn = None
 
@@ -127,7 +115,7 @@ class SpreadsheetCrawler:
         for row in chunks(data,len(char_range(column_range))):
             row_values = list(map(lambda x: x.value.strip(), row))
             if row_values[0] != '':
-                row_dict = OrderedDict(zip(header_values,row_values))
+                row_dict = dict(zip(header_values,row_values))
                 row_dict["Localidad"] = self.sheet.title
                 row_dict["lat"] = ""
                 row_dict["long"] = ""
@@ -139,7 +127,10 @@ if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
 
     crawl.change_sheet("Caceres")
-    json = {}
-    json["demand"] = crawl.update_demand()
-    json["makers"] = crawl.update_stock()
-    pprint(json)
+    final_json = {}
+    final_json["demand"] = crawl.update_demand()
+    final_json["makers"] = crawl.update_stock()
+    import json
+    with open('data.json', 'w') as fp:
+        json.dump(final_json, fp)
+    pprint(final_json)
