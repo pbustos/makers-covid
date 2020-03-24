@@ -52,7 +52,8 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 @socketio.on('connect')
 def handle_connection():
-    with open(os.path.join(CURRENT_DIR,'data_Caceres.json'), 'f') as file:
+    logging.info("Direct data petition connection")
+    with open(os.path.join(CURRENT_DIR,'data_Caceres.json'), 'r') as file:
         data = json.load(file)
         socketio.emit('connection_response', {'data': data})
 
