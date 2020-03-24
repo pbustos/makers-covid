@@ -4,21 +4,34 @@ from telegram import InlineQueryResultArticle, ParseMode, \
     InputTextMessageContent
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler
 from telegram.utils.helpers import escape_markdown
+from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
+                          ConversationHandler)
 import logging
 from uuid import uuid4
 
-# Enable logging
+
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-TOKEN="1126502323:AAGrh6ef31YrNbUjG5pXVptJJd0ymdVTTFc"
-tb=telebot.TeleBot(TOKEN)
 
+TOKEN="1126502323:AAGrh6ef31YrNbUjG5pXVptJJd0ymdVTTFc"
+
+
+GENDER, PHOTO, LOCATION, BIO = range(4)
 
 def start(update, context):
-    """Send a message when the command /start is issued."""
-    update.message.reply_text('Hi!')
+    reply_keyboard = [['Maker', 'Solicitante', 'Other']]
+
+    update.message.reply_text(
+        'Hi! My name is Professor Bot. I will hold a conversation with you. '
+        'Send /cancel to stop talking to me.\n\n'
+        'Eres Maker o Solicitante?',
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    return GENDER
 
 
 def help(update, context):
