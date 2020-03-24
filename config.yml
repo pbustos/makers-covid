@@ -1,3 +1,4 @@
+crawler: xlsx # gspread or xlsx
 SHEET_DATA:
   Caceres:
     DEMAND_COLUMN_RANGE:
