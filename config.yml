@@ -1,8 +1,8 @@
 SHEET_DATA:
   Caceres:
     DEMAND_COLUMN_RANGE:
-    - H
-    - K
+    - J
+    - O
     DEMAND_HEADERS_MAP:
       "Organización": usuario
     DEMAND_INITIAL_ROW: 4
@@ -11,9 +11,11 @@ SHEET_DATA:
       - int
       - int
       - str
+      - str
+      - str
     STOCK_COLUMN_RANGE:
     - B
-    - F
+    - H
     STOCK_HEADERS_MAP:
       Usuario Telegram: usuario
     STOCK_INITIAL_ROW: 4
@@ -23,8 +25,10 @@ SHEET_DATA:
       - int
       - int
       - str
+      - str
+      - str
 
-SPREAD_SHEET_URL: "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701"
+SPREAD_SHEET_URL: "https://docs.google.com/spreadsheets/d/13kPmM2GXyzMb9H2C1dikm1qg4n6ehD6309uK3wPhrJc/edit#gid=1873691210"
 
 SOCKETIO_PORT: 8000
 

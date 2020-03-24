@@ -4,6 +4,8 @@ import pickle
 import threading
 import time
 import json
+from collections import defaultdict
+
 import yaml
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit, send
@@ -107,7 +109,7 @@ class SpreadsheetCrawler(threading.Thread):
         self.__credentials = None
         self.__spreadsheet = None
         self.__conn = None
-        self.__current_json = {}
+        self.__current_jsons = defaultdict(dict)
 
     @property
     def spreadsheet(self):
@@ -159,8 +161,6 @@ class SpreadsheetCrawler(threading.Thread):
                 row_values = reasign_type(types_map, row_values)
                 row_dict = dict(zip(header_values,row_values))
                 row_dict["Localidad"] = self.sheet.title
-                row_dict["lat"] = ""
-                row_dict["long"] = ""
                 json[row_values[0]]= (row_dict)
         return json
             
@@ -170,10 +170,10 @@ class SpreadsheetCrawler(threading.Thread):
             final_json = {}
             final_json["demand"] = self.update_demand()
             final_json["makers"] = self.update_stock()
-            diff_result = dictdiffer.diff(self.__current_json, final_json, dot_notation=False)
+            diff_result = dictdiffer.diff(self.__current_jsons[self.sheet.title], final_json, dot_notation=False)
             list_diff_result = list(diff_result)
             if len(list_diff_result) > 0:
-                self.__current_json = final_json
+                self.__current_jsons[self.sheet.title] = final_json
                 with app.test_request_context():
                     update(list_diff_result)
                 print(list_diff_result)
