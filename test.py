@@ -27,11 +27,11 @@ with open(r'config.yml', encoding='utf8') as file:
 app = Flask(__name__)
 app.debug = False
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 @socketio.on('connect')
 def handle_connection():
-    with open('data.json') as file:
+    with open(f'data_Caceres.json') as file:
         data = json.load(file)
         socketio.emit('connection_response', {'data': data})
 
