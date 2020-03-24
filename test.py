@@ -15,7 +15,7 @@ import unidecode
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-with open(r'config.yml') as file:
+with open(r'config.yml', encoding='utf8') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
     SPREAD_SHEET_URL = config["SPREAD_SHEET_URL"]
     SHEET_DATA = config["SHEET_DATA"]
