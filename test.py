@@ -4,6 +4,7 @@ import pickle
 import threading
 import time
 import json
+import yaml
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit, send
 import gspread
@@ -11,23 +12,14 @@ import dictdiffer
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-# If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+with open(r'config.yml') as file:
+    config = yaml.load(file, Loader=yaml.FullLoader)
+    SPREAD_SHEET_URL = config["SPREAD_SHEET_URL"]
+    SHEET_DATA = config["SHEET_DATA"]
+    SCOPES = config["SCOPES"]
+    SOCKETIO_PORT = config["SOCKETIO_PORT"]
 
-# The ID and range of a sample spreadsheet.
 
-SPREAD_SHEET_URL = "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701"
-
-SHEET_DATA = {
-    "Caceres": {
-        "STOCK_INITIAL_ROW": 4,
-        "STOCK_COLUMN_RANGE": ['B','F'],
-        "STOCK_HEADERS_MAP": {"Usuario Telegram": "usuario"},
-        "DEMAND_INITIAL_ROW": 4,
-        "DEMAND_COLUMN_RANGE": ['H','K'],
-        "DEMAND_HEADERS_MAP": {"Organización": "usuario"}
-    }
-}
 
 app = Flask(__name__)
 app.debug = False
@@ -36,12 +28,7 @@ socketio = SocketIO(app)
 
 @socketio.on('connect')
 def handle_connection():
-<<<<<<< HEAD
-    with open('data.json') as file:
-=======
-    #print('New connection: ')
     with open('last_update.json') as file:
->>>>>>> ed2950a3b7a699a3137a395aafc045721f5d8554
         data = json.load(file)
         socketio.emit('connection_response', {'data': data})
 
@@ -195,7 +182,7 @@ class SpreadsheetCrawler(threading.Thread):
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
     crawl.start()
-    socketio.run(app, port=8000, log_output=False, debug=False)
+    socketio.run(app, port=SOCKETIO_PORT, log_output=False, debug=False)
 
     # print("despues")
     # crawl.change_sheet("Caceres")

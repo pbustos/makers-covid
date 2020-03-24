@@ -1,0 +1,23 @@
+SHEET_DATA:
+  Caceres:
+    DEMAND_COLUMN_RANGE:
+    - H
+    - K
+    DEMAND_HEADERS_MAP:
+      "Organizaci\xF3n": usuario
+    DEMAND_INITIAL_ROW: 4
+    STOCK_COLUMN_RANGE:
+    - B
+    - F
+    STOCK_HEADERS_MAP:
+      Usuario Telegram: usuario
+    STOCK_INITIAL_ROW: 4
+
+SPREAD_SHEET_URL: "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701"
+
+SOCKETIO_PORT: 8000
+
+
+SCOPES: # If modifying these scopes, delete the file token.pickle
+  - 'https://www.googleapis.com/auth/spreadsheets.readonly'
+...
