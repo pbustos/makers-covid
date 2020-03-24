@@ -177,17 +177,15 @@ class SpreadsheetCrawler(threading.Thread):
                 with app.test_request_context():
                     update(list_diff_result)
                 print(list_diff_result)
-                with open('data.json', 'w') as outfile:
+                with open('data_'+self.sheet.title+'.json', 'w') as outfile:
                     json.dump(final_json, outfile, indent=4)
-                with open('last_update.json', 'w') as outfile:
+                with open('last_update_'+self.sheet.title+'.json', 'w') as outfile:
                     json.dump(list_diff_result, outfile, indent=4)
 
     def run(self):
         while(True):
             print("compute")
             self.update_all()
-            with app.test_request_context(): 
-                update("Envía por aquí lo que necesites")
             time.sleep(10)
 
 
