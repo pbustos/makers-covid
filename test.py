@@ -9,6 +9,7 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, emit, send
 import gspread
 import dictdiffer
+import unidecode
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -89,8 +90,11 @@ def clean_and_map_header(header, map):
     new_header = header.strip()
     if new_header in map:
         new_header = map[new_header]
+    new_header = remove_special_chars(new_header)
     return new_header.lower()
 
+def remove_special_chars(text):
+    return unidecode.unidecode(text)
 class SpreadsheetCrawler(threading.Thread):
     def __init__(self):
         # Persistence
@@ -143,7 +147,7 @@ class SpreadsheetCrawler(threading.Thread):
         data = self.sheet.range(data_range)
         json = {}
         for row in chunks(data,len(char_range(column_range))):
-            row_values = list(map(lambda x: x.value.strip(), row))
+            row_values = list(map(lambda x: remove_special_chars(x.value.strip()), row))
             if row_values[0] != '':
                 row_dict = dict(zip(header_values,row_values))
                 row_dict["Localidad"] = self.sheet.title
