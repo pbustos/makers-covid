@@ -4,14 +4,25 @@ SHEET_DATA:
     - H
     - K
     DEMAND_HEADERS_MAP:
-      "Organizaci\xF3n": usuario
+      "Organización": usuario
     DEMAND_INITIAL_ROW: 4
+    DEMAND_COLUMN_TYPES:
+      - str
+      - int
+      - int
+      - str
     STOCK_COLUMN_RANGE:
     - B
     - F
     STOCK_HEADERS_MAP:
       Usuario Telegram: usuario
     STOCK_INITIAL_ROW: 4
+    STOCK_COLUMN_TYPES:
+      - str
+      - int
+      - int
+      - int
+      - str
 
 SPREAD_SHEET_URL: "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701"
 
