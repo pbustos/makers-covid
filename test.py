@@ -11,7 +11,7 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, emit, send
 import gspread
 import dictdiffer
-import unidecode
+import unidecode 
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -31,7 +31,7 @@ socketio = SocketIO(app)
 
 @socketio.on('connect')
 def handle_connection():
-    with open('last_update.json') as file:
+    with open('data.json') as file:
         data = json.load(file)
         socketio.emit('connection_response', {'data': data})
 
