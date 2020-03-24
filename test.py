@@ -1,8 +1,13 @@
 from __future__ import print_function
+
+import logging
+import os
+import sys
 import threading
 import time
 import json
 from collections import defaultdict
+from logging import handlers
 
 import yaml
 from flask import Flask, render_template
@@ -14,7 +19,24 @@ import utils
 from gspread_crawler import GSpreadCrawler
 from xlsx_crawler import XLSXCrawler
 
-with open(r'config.yml', encoding='utf8') as file:
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+LOGFILE = os.path.join(CURRENT_DIR ,"{0}/{1}.log").format("logs", "test.py")
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+
+fileHandler = handlers.RotatingFileHandler(LOGFILE, maxBytes=(1048576*5), backupCount=7)
+fileHandler.setFormatter(logFormatter)
+logger.addHandler(fileHandler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+logger.addHandler(consoleHandler)
+
+
+with open(os.path.join(CURRENT_DIR,'config.yml'), 'r', encoding='utf8') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
     SPREAD_SHEET_URL = config["SPREAD_SHEET_URL"]
     SHEET_DATA = config["SHEET_DATA"]
@@ -30,12 +52,13 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 @socketio.on('connect')
 def handle_connection():
-    with open(f'data_Caceres.json') as file:
+    logging.info("Direct data petition connection")
+    with open(os.path.join(CURRENT_DIR,'data_Caceres.json'), 'r') as file:
         data = json.load(file)
         socketio.emit('connection_response', {'data': data})
 
 def update(update):
-    print("Broadcasting update")
+    logging.info("Broadcasting update")
     socketio.emit('update', { "data" : update}, broadcast=True)
 
 
@@ -88,15 +111,15 @@ class CovidUpdater(threading.Thread):
                 self.__current_jsons[table] = final_json
                 with app.test_request_context():
                     update(list_diff_result)
-                print(list_diff_result)
-                with open('data_'+table+'.json', 'w') as outfile:
+                logging.info(list_diff_result)
+                with open(os.path.join(CURRENT_DIR,'data_'+table+'.json'), 'w') as outfile:
                     json.dump(final_json, outfile, indent=4)
-                with open('last_update_'+table+'.json', 'w') as outfile:
+                with open(os.path.join(CURRENT_DIR,'last_update_'+table+'.json'), 'w') as outfile:
                     json.dump(list_diff_result, outfile, indent=4)
 
     def run(self):
         while(True):
-            print("compute")
+            logging.info("compute")
             self.update_all()
             time.sleep(10)
 
@@ -106,7 +129,7 @@ if __name__ == '__main__':
     crawl.start()
     socketio.run(app, host='0.0.0.0', port=SOCKETIO_PORT, log_output=False, debug=False)
 
-    # print("despues")
+    # logging.info("despues")
     # crawl.change_sheet("Caceres")
     # final_json = {}
     # final_json["demand"] = crawl.update_demand()
@@ -114,4 +137,4 @@ if __name__ == '__main__':
     # import json
     # with open('data.json', 'w') as fp:
     #     json.dump(final_json, fp)
-    # pprint(final_json)
+    # plogging.info(final_json)
