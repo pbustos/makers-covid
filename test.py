@@ -192,7 +192,7 @@ class SpreadsheetCrawler(threading.Thread):
 if __name__ == '__main__':
     crawl = SpreadsheetCrawler()
     crawl.start()
-    socketio.run(app, port=SOCKETIO_PORT, log_output=False, debug=False)
+    socketio.run(app, host='0.0.0.0', port=SOCKETIO_PORT, log_output=False, debug=False)
 
     # print("despues")
     # crawl.change_sheet("Caceres")
