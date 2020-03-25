@@ -140,8 +140,8 @@ class CovidMakers(Service):
         
         defineDiff();
         // Crea una nueva conexión.
-        //var socket = io('ws://158.49.112.158:8443');
-        var socket = io('ws://127.0.0.1:8000');
+        var socket = io('ws://158.49.112.158:8443');
+        //var socket = io('ws://127.0.0.1:8000');
         //socket.nsp = '/general'
         socket.emit('connect', {data: 'Caceres'});
         
