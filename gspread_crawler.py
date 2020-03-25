@@ -8,7 +8,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 import utils
 
-with open(r'config.yml', encoding='utf8') as file:
+import os
+CURRENT_DIR =os.path.dirname(os.path.abspath(__file__))
+
+with open(os.path.join(CURRENT_DIR,'config.yml'), 'r' ,encoding='utf8') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
     SPREAD_SHEET_URL = config["SPREAD_SHEET_URL"]
     SHEET_DATA = config["SHEET_DATA"]

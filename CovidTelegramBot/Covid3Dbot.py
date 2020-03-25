@@ -20,74 +20,50 @@ logger = logging.getLogger(__name__)
 TOKEN="1126502323:AAGrh6ef31YrNbUjG5pXVptJJd0ymdVTTFc"
 
 
-GENDER, PHOTO, LOCATION, BIO = range(4)
+TIPOUSUARIO, CIUDAD, CAPDIARIA, CAPACTUAL, DIRECCION = range(5)
 
 def start(update, context):
-    reply_keyboard = [['Maker', 'Solicitante', 'Other']]
+    reply_keyboard = [['Maker', 'Solicitante', 'Otro']]
 
     update.message.reply_text(
-        'Hi! My name is Professor Bot. I will hold a conversation with you. '
-        'Send /cancel to stop talking to me.\n\n'
+        'Hola, este bot tiene como objetivo facilitar la distribución de viseras creadas por los makers extremeños en la lucha contra el COVID-19. '
+        'Envía /cancel si no quieres continuar el proceso. Si quieres continuar, indica a continuación si eres Maker o Solicitante.\n\n'
         'Eres Maker o Solicitante?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-    return GENDER
+    return TIPOUSUARIO
 
 
-def gender(update, context):
+def tipousuario(update, context):
+    #reply_keyboard = [['Cáceres', 'Badajoz', 'Valverde de Leganés', 'Merida', 'Zafra', 'Montijo', 'Miajadas', 'Logrosan', 'Plasencia', 'Almendralejo', 'Montanchez','Don Benito, Villanueva de la Serena', 'Sierra de Gata-Moraleja', 'Other']]
     user = update.message.from_user
-    logger.info("Gender of %s: %s", user.first_name, update.message.text)
-    update.message.reply_text('I see! Please send me a photo of yourself, '
-                              'so I know what you look like, or send /skip if you don\'t want to.',
-                              reply_markup=ReplyKeyboardRemove())
+    logger.info("Tipo de usuario %s: %s", user.first_name, update.message.text)
+    usuariotelegram=user.username
+    makerorsoli=update
+    update.message.reply_text('Genial, indica la ciudad donde realizas la producción ')
 
-    return PHOTO
+    return CIUDAD
 
-def photo(update, context):
+def Capacidadday(update, context):
+    #reply_keyboard = [['Cáceres', 'Badajoz', 'Valverde de Leganés', 'Merida', 'Zafra', 'Montijo', 'Miajadas', 'Logrosan', 'Plasencia', 'Almendralejo', 'Montanchez','Don Benito, Villanueva de la Serena', 'Sierra de Gata-Moraleja', 'Other']]
     print(update)
+    logger.info("Ciudad: %s", update.message.text)
+    ciudad=update.message.text
+    print(ciudad)
+    update.message.reply_text('A continuación, indica la cantidad actual de productos fabricados: '
+                              )
+
+    return CAPACTUAL
+
+def end(update, context):
     user = update.message.from_user
-    photo_file = update.message.photo[-1].get_file()
-    photo_file.download('user_photo.jpg')
-    logger.info("Photo of %s: %s", user.first_name, 'user_photo.jpg')
-    update.message.reply_text('Gorgeous! Now, send me your location please, '
-                              'or send /skip if you don\'t want to.')
-
-    return LOCATION
-
-
-def skip_photo(update, context):
-    user = update.message.from_user
-    logger.info("User %s did not send a photo.", user.first_name)
-    update.message.reply_text('I bet you look great! Now, send me your location please, '
-                              'or send /skip.')
-
-    return LOCATION
-
-def location(update, context):
-    user = update.message.from_user
-    user_location = update.message.location
-    logger.info("Location of %s: %f / %f", user.first_name, user_location.latitude,
-                user_location.longitude)
-    update.message.reply_text('Maybe I can visit you sometime! '
-                              'At last, tell me something about yourself.')
-
-    return BIO
-
-
-def skip_location(update, context):
-    user = update.message.from_user
-    logger.info("User %s did not send a location.", user.first_name)
-    update.message.reply_text('You seem a bit paranoid! '
-                              'At last, tell me something about yourself.')
-
-    return BIO
-
-def bio(update, context):
-    user = update.message.from_user
-    logger.info("Bio of %s: %s", user.first_name, update.message.text)
-    update.message.reply_text('Thank you! I hope we can talk again some day.')
+    logger.info("Capacidad : %s", update.message.text)
+    Produccionactual=update.message.text
+    print(Produccionactual)
+    update.message.reply_text('Muchas gracias, su capacidad actual ha sido actualizada')
 
     return ConversationHandler.END
+
 
 def cancel(update, context):
     user = update.message.from_user
@@ -119,20 +95,20 @@ def main():
         entry_points=[CommandHandler('start', start)],
 
         states={
-            GENDER: [MessageHandler(Filters.regex('^(Maker|Solicitante|Other)$'), gender)],
+            TIPOUSUARIO: [MessageHandler(Filters.regex('^(Maker|Solicitante|Other)$'), tipousuario)],
 
-            PHOTO: [MessageHandler(Filters.photo, photo),
-                    CommandHandler('skip', skip_photo)],
+            CIUDAD: [MessageHandler(Filters.regex('^(Cáceres|Badajoz|Valverde de Leganés|Merida|Zafra|Montijo|Miajadas|Logrosan|Plasencia|Almendralejo|Montanchez|Don Benito, Villanueva de la Serena|Sierra de Gata-Moraleja|Other)$'), Capacidadday)
+                    ],
 
-            LOCATION: [MessageHandler(Filters.location, location),
-                       CommandHandler('skip', skip_location)],
+            CAPDIARIA: [MessageHandler(Filters.text, Capacidadday)],
 
-            BIO: [MessageHandler(Filters.text, bio)]
+            CAPACTUAL: [MessageHandler(Filters.text, end)]
+
+            #DIRECCION: [MessageHandler(Filters.text, address)]
         },
 
         fallbacks=[CommandHandler('cancel', cancel)]
     )
-
     dp.add_handler(conv_handler)
 
     # log all errors
