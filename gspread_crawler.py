@@ -51,6 +51,7 @@ class GSpreadCrawler:
         self.__credentials = None
         self.__spreadsheet = None
         self.__conn = None
+        self.sheet = None
 
     @property
     def spreadsheet(self):
@@ -71,12 +72,6 @@ class GSpreadCrawler:
     def change_sheet(self, sheet):
         if isinstance(sheet, int):
             self.sheet = self.spreadsheet.get_worksheet(sheet)
-        elif isinstance(sheet, str):
-            self.sheet = self.spreadsheet.worksheet(sheet)
-
-    def change_sheet(self, sheet):
-        if isinstance(sheet,int):
-            self.sheet =self.spreadsheet.get_worksheet(sheet)
         elif isinstance(sheet, str):
             self.sheet = self.spreadsheet.worksheet(sheet)
 
