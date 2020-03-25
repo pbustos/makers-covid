@@ -49,22 +49,27 @@ class XLSXCrawler:
         stock_initial_column = SHEET_DATA[self.worksheet.title]["STOCK_INITIAL_ROW"]
         stock_headers_map = SHEET_DATA[self.worksheet.title]["STOCK_HEADERS_MAP"]
         stock_column_types = SHEET_DATA[self.worksheet.title]["STOCK_COLUMN_TYPES"]
-        return self.update_subtable(stock_column_range,stock_initial_column, stock_headers_map, stock_column_types)
+        stock_ignored_columns = SHEET_DATA[self.worksheet.title]["STOCK_IGNORED_COLUMNS"]
+        return self.update_subtable(stock_column_range, stock_initial_column, stock_headers_map, stock_column_types, stock_ignored_columns)
+
 
     def update_demand(self):
         demand_column_range = SHEET_DATA[self.worksheet.title]["DEMAND_COLUMN_RANGE"]
         demand_initial_column = SHEET_DATA[self.worksheet.title]["DEMAND_INITIAL_ROW"]
         demand_headers_map = SHEET_DATA[self.worksheet.title]["DEMAND_HEADERS_MAP"]
         demand_column_types = SHEET_DATA[self.worksheet.title]["DEMAND_COLUMN_TYPES"]
-        return self.update_subtable(demand_column_range, demand_initial_column, demand_headers_map, demand_column_types)
+        demand_ignored_columns = SHEET_DATA[self.worksheet.title]["DEMAND_IGNORED_COLUMNS"]
+        return self.update_subtable(demand_column_range, demand_initial_column, demand_headers_map, demand_column_types, demand_ignored_columns)
 
-    def update_subtable(self, column_range, initial_row, headers_mapping, types_map):
+    def update_subtable(self, column_range, initial_row, headers_mapping, types_map, ignored_columns):
         headers = self.worksheet[column_range[0]+str(initial_row):column_range[-1]+str(initial_row)]
         header_values = list(map(lambda x: utils.clean_and_map_header(x.value, headers_mapping), headers[0]))
+        header_values = utils.remove_ignored_columns(ignored_columns, header_values)
         data = self.worksheet[column_range[0]+str(initial_row+1):column_range[-1]+str(1000)]
         json = {}
         for row in data:
             row_values = list(map(lambda x: utils.remove_special_chars(x.value), row))
+            row_values = utils.remove_ignored_columns(ignored_columns, row_values)
             if row_values[0] != '':
                 row_values = utils.reasign_type(types_map, row_values)
                 row_dict = dict(zip(header_values,row_values))

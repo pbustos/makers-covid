@@ -1,4 +1,4 @@
-crawler: xlsx # gspread or xlsx
+crawler: gspread2 # gspread or xlsx
 SHEET_DATA:
   Caceres:
     DEMAND_COLUMN_RANGE:
@@ -7,6 +7,8 @@ SHEET_DATA:
     DEMAND_HEADERS_MAP:
       "Organización": usuario
     DEMAND_INITIAL_ROW: 4
+    DEMAND_IGNORED_COLUMNS:
+      - 3
     DEMAND_COLUMN_TYPES:
       - str
       - int
@@ -20,6 +22,8 @@ SHEET_DATA:
     STOCK_HEADERS_MAP:
       Usuario Telegram: usuario
     STOCK_INITIAL_ROW: 4
+    STOCK_IGNORED_COLUMNS:
+      - 4
     STOCK_COLUMN_TYPES:
       - str
       - int
