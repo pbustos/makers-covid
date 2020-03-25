@@ -10,7 +10,6 @@ class CovidMakers(Service):
         self.response.payload = """
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -133,14 +132,16 @@ class CovidMakers(Service):
         var makers = [];
         var demand = [];
 
-        var layers = [];
+        var layers = {};
+        layers.demands = {};
+        layers.makers = {};
         var layersIds = {};
         
         
         defineDiff();
         // Crea una nueva conexión.
-        var socket = io('ws://158.49.112.158:8443');
-        //var socket = io('ws://127.0.0.1:8000');
+        //var socket = io('ws://158.49.112.158:8443');
+        var socket = io('ws://127.0.0.1:8000');
         //socket.nsp = '/general'
         socket.emit('connect', {data: 'Caceres'});
         
@@ -373,10 +374,10 @@ class CovidMakers(Service):
 
             matchingNodes(nodes, matchedNodes, nodesToDraw);
 
-            if (!layersIds[type]) {layersIds[type] = [] }
-            if (removeAll){  nodesToRemove = layersIds[type].diff([]) }
-            else {  nodesToRemove = layersIds[type].diff(matchedNodes) }
-            removeNodes(nodesToRemove, type);
+            //if (!layersIds[type]) {layersIds[type] = [] }
+            //if (removeAll){  nodesToRemove = layersIds[type].diff([]) }
+            //else {  nodesToRemove = layersIds[type].diff(matchedNodes) }
+            removeNodes(type);
 
             if (Object.keys(nodesToDraw)){
                 Object.keys(matchedNodes).forEach(function (nodeToAdd) {
@@ -384,8 +385,8 @@ class CovidMakers(Service):
                     if (!layers[node]) {
 
                         //if (isJson(nodesToDraw[node].geojson )) {
-                        layersIds[type].push(node);
-                        drawNode(layers, nodesToDraw, node, type);
+                        //layersIds[type].push(node);
+                        drawNode(layers[type], nodesToDraw, node, type);
                         //}
                     }
                 });
@@ -500,18 +501,9 @@ class CovidMakers(Service):
 
 
         //Removen nodes from the map.
-        function removeNodes(nodesToRemove, type) {
-            nodesToRemove.forEach(function (nodeToRemove) {
-                if (layers[nodeToRemove]) {
-                    map.removeLayer(layers[nodeToRemove]);
-                }
-
-                let index = layersIds[type].indexOf(nodeToRemove);
-                if (index > -1) {
-                    layersIds[type].splice(index, 1);
-                }
-            });
-
+        function removeNodes(type) {
+            Object.keys(layers[type]).forEach(n => map.removeLayer(layers[type][n]))
+            layers[type] = {};
         }
 
         
