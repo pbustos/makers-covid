@@ -150,6 +150,14 @@ class CovidMakers(Service):
                         makers.push(res.makers[key]);
                     }
                 });
+
+                var formatter = new JSONFormatter(makers);
+                $("#makers_html").html(formatter.render())
+                formatter.openAtDepth(5);
+
+                var formatter = new JSONFormatter(demand);
+                $("#demands_html").html(formatter.render())
+                formatter.openAtDepth(5);
                 //res.demand.push(...res.makers);
                 processNodes(makers, 'makers');
                 processNodes(demand, 'demands');
@@ -199,7 +207,15 @@ class CovidMakers(Service):
                         }
                     }
                 }
-                
+
+                var formatter = new JSONFormatter(makers);
+                $("#makers_html").html(formatter.render())
+                formatter.openAtDepth(5);
+
+                var formatter = new JSONFormatter(demand);
+                $("#demands_html").html(formatter.render())
+                formatter.openAtDepth(5);
+
                 processNodes(makers, 'makers', true);
                 processNodes(demand, 'demands', true);
             }
@@ -238,8 +254,7 @@ class CovidMakers(Service):
             var nodesToRemove = [];
             //Get the nodes we are going to Draw
 
-            const formatter = new JSONFormatter(nodes);
-            $("#"+type+"_html").html(formatter.render())
+          
 
             matchingNodes(nodes, matchedNodes, nodesToDraw);
 
@@ -425,5 +440,4 @@ class CovidMakers(Service):
 </body>
 
 </html>
-  
         """
