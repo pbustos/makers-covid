@@ -29,6 +29,9 @@ def clean_and_map_header(header, map):
     new_header = remove_special_chars(new_header)
     return new_header.lower()
 
+def remove_ignored_columns(columns, row):
+    return [i for j, i in enumerate(row) if j not in columns]
+
 def remove_special_chars(text):
     if isinstance(text, str):
         return unidecode.unidecode(text)

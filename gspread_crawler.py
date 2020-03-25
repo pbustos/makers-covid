@@ -10,8 +10,11 @@ import utils
 
 import os
 CURRENT_DIR =os.path.dirname(os.path.abspath(__file__))
+TOKEN_PATH = os.path.join(CURRENT_DIR,'token.pickle')
+CREDENTIALS_PATH = os.path.join(CURRENT_DIR,'credentials.json')
+CONFIG_PATH = os.path.join(CURRENT_DIR,'config.yml')
 
-with open(os.path.join(CURRENT_DIR,'config.yml'), 'r' ,encoding='utf8') as file:
+with open(CONFIG_PATH, 'r' ,encoding='utf8') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
     SPREAD_SHEET_URL = config["SPREAD_SHEET_URL"]
     SHEET_DATA = config["SHEET_DATA"]
@@ -23,7 +26,7 @@ class MyCredentials (object):
         self.access_token = access_token
 
     def refresh (self, http):
-        self.access_token = self.readCredentials('credentials.json').token
+        self.access_token = self.readCredentials(CREDENTIALS_PATH).token
 
     def readCredentials(self, file_name):
         ## Initialize Sheets API
@@ -31,8 +34,8 @@ class MyCredentials (object):
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if os.path.exists('token.pickle'):
-            with open('token.pickle', 'rb') as token:
+        if os.path.exists(TOKEN_PATH):
+            with open(TOKEN_PATH, 'rb') as token:
                 creds = pickle.load(token)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
@@ -42,7 +45,7 @@ class MyCredentials (object):
                 flow = InstalledAppFlow.from_client_secrets_file(file_name, SCOPES)
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open('token.pickle', 'wb') as token:
+            with open(TOKEN_PATH, 'wb') as token:
                 pickle.dump(creds, token)
         return creds
 
@@ -51,7 +54,7 @@ class GSpreadCrawler:
         self.__credentials = None
         self.__spreadsheet = None
         self.__conn = None
-        self.sheet = None
+        self.worksheet = None
 
     @property
     def spreadsheet(self):
@@ -71,38 +74,43 @@ class GSpreadCrawler:
 
     def change_sheet(self, sheet):
         if isinstance(sheet, int):
-            self.sheet = self.spreadsheet.get_worksheet(sheet)
+            self.worksheet = self.spreadsheet.get_worksheet(sheet)
         elif isinstance(sheet, str):
-            self.sheet = self.spreadsheet.worksheet(sheet)
+            self.worksheet = self.spreadsheet.worksheet(sheet)
 
     def update_stock(self):
-        stock_column_range = SHEET_DATA[self.sheet.title]["STOCK_COLUMN_RANGE"]
-        stock_initial_column = SHEET_DATA[self.sheet.title]["STOCK_INITIAL_ROW"]
-        stock_headers_map = SHEET_DATA[self.sheet.title]["STOCK_HEADERS_MAP"]
-        stock_column_types = SHEET_DATA[self.sheet.title]["STOCK_COLUMN_TYPES"]
-        return self.update_subtable(stock_column_range,stock_initial_column, stock_headers_map, stock_column_types)
+        stock_column_range = SHEET_DATA[self.worksheet.title]["STOCK_COLUMN_RANGE"]
+        stock_initial_column = SHEET_DATA[self.worksheet.title]["STOCK_INITIAL_ROW"]
+        stock_headers_map = SHEET_DATA[self.worksheet.title]["STOCK_HEADERS_MAP"]
+        stock_column_types = SHEET_DATA[self.worksheet.title]["STOCK_COLUMN_TYPES"]
+        stock_ignored_columns = SHEET_DATA[self.worksheet.title]["STOCK_IGNORED_COLUMNS"]
+        return self.update_subtable(stock_column_range, stock_initial_column, stock_headers_map, stock_column_types, stock_ignored_columns)
+
 
     def update_demand(self):
-        demand_column_range = SHEET_DATA[self.sheet.title]["DEMAND_COLUMN_RANGE"]
-        demand_initial_column = SHEET_DATA[self.sheet.title]["DEMAND_INITIAL_ROW"]
-        demand_headers_map = SHEET_DATA[self.sheet.title]["DEMAND_HEADERS_MAP"]
-        demand_column_types = SHEET_DATA[self.sheet.title]["DEMAND_COLUMN_TYPES"]
-        return self.update_subtable(demand_column_range, demand_initial_column, demand_headers_map, demand_column_types)
+        demand_column_range = SHEET_DATA[self.worksheet.title]["DEMAND_COLUMN_RANGE"]
+        demand_initial_column = SHEET_DATA[self.worksheet.title]["DEMAND_INITIAL_ROW"]
+        demand_headers_map = SHEET_DATA[self.worksheet.title]["DEMAND_HEADERS_MAP"]
+        demand_column_types = SHEET_DATA[self.worksheet.title]["DEMAND_COLUMN_TYPES"]
+        demand_ignored_columns = SHEET_DATA[self.worksheet.title]["DEMAND_IGNORED_COLUMNS"]
+        return self.update_subtable(demand_column_range, demand_initial_column, demand_headers_map, demand_column_types, demand_ignored_columns)
 
 
-    def update_subtable(self, column_range, initial_row, headers_mapping, types_map):
+    def update_subtable(self, column_range, initial_row, headers_mapping, types_map, ignored_columns):
         header_range = column_range[0]+str(initial_row)+":"+column_range[-1]+str(initial_row)
         data_range = column_range[0]+str(initial_row+1)+":"+column_range[-1]+str(1000)
-        headers = self.sheet.range(header_range)
+        headers = self.worksheet.range(header_range)
         header_values = list(map(lambda x: utils.clean_and_map_header(x.value, headers_mapping), headers))
-        data = self.sheet.range(data_range)
+        header_values = utils.remove_ignored_columns(ignored_columns, header_values)
+        data = self.worksheet.range(data_range)
         json = {}
         for row in utils.chunks(data,len(utils.char_range(column_range))):
             row_values = list(map(lambda x: utils.remove_special_chars(x.value.strip()), row))
+            row_values = utils.remove_ignored_columns(ignored_columns, row_values)
             if row_values[0] != '':
                 row_values = utils.reasign_type(types_map, row_values)
                 row_dict = dict(zip(header_values,row_values))
-                row_dict["Localidad"] = self.sheet.title
+                row_dict["Localidad"] = self.worksheet.title
                 json[row_values[0]]= (row_dict)
         return json
 
