@@ -29,7 +29,9 @@ SHEET_DATA:
       - str
       - str
 
-SPREAD_SHEET_URL: "https://docs.google.com/spreadsheets/d/13kPmM2GXyzMb9H2C1dikm1qg4n6ehD6309uK3wPhrJc/edit#gid=1873691210"
+#SPREAD_SHEET_URL: "https://docs.google.com/spreadsheets/d/13kPmM2GXyzMb9H2C1dikm1qg4n6ehD6309uK3wPhrJc/edit#gid=1873691210"
+# real deal
+SPREAD_SHEET_URL: "https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit?ts=5e7b4100#gid=1873691210"
 
 SOCKETIO_PORT: 8000
 
