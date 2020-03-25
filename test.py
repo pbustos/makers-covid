@@ -20,7 +20,7 @@ from gspread_crawler import GSpreadCrawler
 from xlsx_crawler import XLSXCrawler
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-LOGFILE = os.path.join(CURRENT_DIR ,"{0}/{1}.log").format("logs", "test.py")
+LOGFILE = os.path.join(CURRENT_DIR, "{0}/{1}.log").format("logs", "test.py")
 
 
 logger = logging.getLogger()
@@ -44,7 +44,6 @@ with open(os.path.join(CURRENT_DIR,'config.yml'), 'r', encoding='utf8') as file:
     SOCKETIO_PORT = config["SOCKETIO_PORT"]
 
 
-
 app = Flask(__name__)
 app.debug = False
 app.config['SECRET_KEY'] = 'secret!'
@@ -55,11 +54,17 @@ def handle_connection():
     logging.info("Direct data petition connection")
     with open(os.path.join(CURRENT_DIR,'data_Caceres.json'), 'r') as file:
         data = json.load(file)
-        socketio.emit('connection_response', {'data': data})
+        try:
+            socketio.emit('connection_response', {'data': data})
+        except Exception as e:
+            logging.exception("Problem emitting socketio: connection_response")
 
 def update(update):
     logging.info("Broadcasting update")
-    socketio.emit('update', { "data" : update}, broadcast=True)
+    try:
+        socketio.emit('update', { "data" : update}, broadcast=True)
+    except Exception as e:
+        logging.exception("Problem emitting socketio: update")
 
 
 class CovidUpdater(threading.Thread):
@@ -127,7 +132,10 @@ class CovidUpdater(threading.Thread):
 if __name__ == '__main__':
     crawl = CovidUpdater()
     crawl.start()
-    socketio.run(app, host='0.0.0.0', port=SOCKETIO_PORT, log_output=False, debug=False)
+    try:
+        socketio.run(app, host='0.0.0.0', port=SOCKETIO_PORT, log_output=False, debug=False)
+    except Exception as e:
+        logging.exception("Problem in socketio RUN: CLOSING")
 
     # logging.info("despues")
     # crawl.change_sheet("Caceres")

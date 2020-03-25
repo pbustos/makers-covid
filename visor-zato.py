@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from zato.server.service import Service
+
+
+class CovidMakers(Service):
+
+    def handle(self):
+        self.response.content_type = 'text/html; charset=utf-8'
+        self.response.payload = """
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -429,3 +440,4 @@
 </body>
 
 </html>
+        """
