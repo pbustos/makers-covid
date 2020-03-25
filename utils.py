@@ -39,5 +39,14 @@ def remove_special_chars(text):
         return text
 
 def reasign_type(types, intput_array):
-    result = [0 if method == 'int' and (input == '' or input is None) else eval(method)(input) for method, input in zip(types, intput_array)]
+    result = []
+    for method, input in zip(types, intput_array):
+        if method == 'int' and (input == '' or input is None):
+            result.append(0)
+        else:
+            try:
+                result.append(eval(method)(input))
+            except:
+                if method == "int":
+                    result.append(-1)
     return result
