@@ -17,6 +17,7 @@ import dictdiffer
 
 import utils
 from gspread_crawler import GSpreadCrawler
+from gspread_crawler2 import GSpreadCrawler2
 from xlsx_crawler import XLSXCrawler
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +77,8 @@ class CovidUpdater(threading.Thread):
             self.__info_getter = XLSXCrawler()
         elif config["crawler"] == "gspread":
             self.__info_getter = GSpreadCrawler()
+        elif config["crawler"] == "gspread2":
+            self.__info_getter = GSpreadCrawler2()
 
     def update_all(self):
         for table in SHEET_DATA.keys():
