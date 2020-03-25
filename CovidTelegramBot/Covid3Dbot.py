@@ -40,7 +40,6 @@ def start(update, context):
 
 
 def tipousuario(update, context):
-    #reply_keyboard = [['Cáceres', 'Badajoz', 'Valverde de Leganés', 'Merida', 'Zafra', 'Montijo', 'Miajadas', 'Logrosan', 'Plasencia', 'Almendralejo', 'Montanchez','Don Benito, Villanueva de la Serena', 'Sierra de Gata-Moraleja', 'Other']]
     user = update.message.from_user
     usuariotelegram = user.username
     logger.info("Tipo de usuario %s: %s", user.first_name, update.message.text)
@@ -56,7 +55,6 @@ def tipousuario(update, context):
 def Ciudad(update, context):
     user = update.message.from_user
     usuariotelegram = user.username
-    #reply_keyboard = [['Cáceres', 'Badajoz', 'Valverde de Leganés', 'Merida', 'Zafra', 'Montijo', 'Miajadas', 'Logrosan', 'Plasencia', 'Almendralejo', 'Montanchez','Don Benito, Villanueva de la Serena', 'Sierra de Gata-Moraleja', 'Other']]
     logger.info("Ciudad: %s", update.message.text)
     ciudad=update.message.text
     with open(usuariotelegram+'.json') as file:
@@ -75,11 +73,16 @@ def Capactual(update, context):
     logger.info("Capacidad : %s", update.message.text)
     Produccionactual=update.message.text
     update.message.reply_text('Muchas gracias, su capacidad actual ha sido actualizada')
-    with open(usuariotelegram+'.json') as file:
-        json_bot = json.load(file)
-    json_bot["Stock"]=Produccionactual
-    with open(usuariotelegram+'.json', 'w') as file:
-        json.dump(json_bot, file, indent=4)
+    if update.message.text[0:6]=="/stock":
+        aumentostock={"Usuario Telegram":usuariotelegram, "Aumento_Stock":update.message.text[7:]}
+        with open(usuariotelegram+'stock.json', 'w') as file:
+            json.dump(aumentostock, file, indent=4)
+    else:
+        with open(usuariotelegram+'.json') as file:
+            json_bot = json.load(file)
+        json_bot["Stock"]=Produccionactual
+        with open(usuariotelegram+'.json', 'w') as file:
+            json.dump(json_bot, file, indent=4)
 
     return ConversationHandler.END
 
@@ -110,7 +113,7 @@ def main():
 
     # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+        entry_points=[CommandHandler('start', start), CommandHandler('stock', Capactual) ],
 
         states={
             TIPOUSUARIO: [MessageHandler(Filters.regex('^(Maker|Solicitante|Other)$'), tipousuario)],
