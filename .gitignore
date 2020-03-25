@@ -6,3 +6,7 @@ venv/
 token.pickle
 
 credentials.json
+
+data/
+
+__pycache__/

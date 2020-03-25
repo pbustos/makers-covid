@@ -10,18 +10,17 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
 import logging
 import json
 from uuid import uuid4
-
-
+from FileManager import *
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-TOKEN="1126502323:AAGrh6ef31YrNbUjG5pXVptJJd0ymdVTTFc"
-
+TOKEN = "1126502323:AAGrh6ef31YrNbUjG5pXVptJJd0ymdVTTFc"
 
 TIPOUSUARIO, CIUDAD, CAPACTUAL = range(3)
+
 
 def start(update, context):
     reply_keyboard = [['Maker', 'Solicitante', 'Otro']]
@@ -31,67 +30,53 @@ def start(update, context):
         'Envía /cancel si no quieres continuar el proceso. Si quieres continuar, indica a continuación si eres Maker o Solicitante.\n\n'
         'Eres Maker o Solicitante?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    usuariotelegram = user.username
-    json_bot={"Usuario Telegram":usuariotelegram}
-    with open(usuariotelegram+'.json', 'w') as file:
-        json.dump(json_bot, file, indent=4)
+    datasession = load_datasession(user)
 
     return TIPOUSUARIO
 
 
 def tipousuario(update, context):
+    # reply_keyboard = [['Cáceres', 'Badajoz', 'Valverde de Leganés', 'Merida', 'Zafra', 'Montijo', 'Miajadas', 'Logrosan', 'Plasencia', 'Almendralejo', 'Montanchez','Don Benito, Villanueva de la Serena', 'Sierra de Gata-Moraleja', 'Other']]
     user = update.message.from_user
-    usuariotelegram = user.username
+    datasession = load_datasession(user)
+    datasession[str(user.id)]["Tipousuario"] = update.message.text
+    write_session(user.username, datasession)
     logger.info("Tipo de usuario %s: %s", user.first_name, update.message.text)
     update.message.reply_text('Genial, indica la ciudad donde realizas la producción ')
-    tipodeusuario=update.message.text
-    with open(usuariotelegram+'.json') as file:
-        json_bot = json.load(file)
-    json_bot["Tipousuario"]=tipodeusuario
-    with open(usuariotelegram+'.json', 'w') as file:
-        json.dump(json_bot, file, indent=4)
     return CIUDAD
+
 
 def Ciudad(update, context):
     user = update.message.from_user
-    usuariotelegram = user.username
+    datasession = load_datasession(user)
+    # reply_keyboard = [['Cáceres', 'Badajoz', 'Valverde de Leganés', 'Merida', 'Zafra', 'Montijo', 'Miajadas', 'Logrosan', 'Plasencia', 'Almendralejo', 'Montanchez','Don Benito, Villanueva de la Serena', 'Sierra de Gata-Moraleja', 'Other']]
     logger.info("Ciudad: %s", update.message.text)
-    ciudad=update.message.text
-    with open(usuariotelegram+'.json') as file:
-        json_bot = json.load(file)
-    json_bot["Ciudad"]=ciudad
-    with open(usuariotelegram+'.json', 'w') as file:
-        json.dump(json_bot, file, indent=4)
-    update.message.reply_text('A continuación, indica la cantidad actual de productos fabricados: '
-                              )
-
+    datasession[str(user.id)]["Localidad"] = update.message.text
+    write_session(user.username, datasession)
+    update.message.reply_text('A continuación, indica la cantidad actual de productos fabricados: ')
     return CAPACTUAL
+
 
 def Capactual(update, context):
     user = update.message.from_user
-    usuariotelegram = user.username
-    logger.info("Capacidad : %s", update.message.text)
-    Produccionactual=update.message.text
-    update.message.reply_text('Muchas gracias, su capacidad actual ha sido actualizada')
-    if update.message.text[0:6]=="/stock":
-        aumentostock={"Usuario Telegram":usuariotelegram, "Aumento_Stock":update.message.text[7:]}
-        with open(usuariotelegram+'stock.json', 'w') as file:
-            json.dump(aumentostock, file, indent=4)
+    text = update.message.text
+    datasession = load_datasession(user)
+    if "+" in text:
+        datasession[str(user.id)]["cantidad actual"] += int(text.replace("+", ""))
+    elif "-" in text:
+        datasession[str(user.id)]["cantidad actual"] -= int(text.replace("-", ""))
     else:
-        with open(usuariotelegram+'.json') as file:
-            json_bot = json.load(file)
-        json_bot["Stock"]=Produccionactual
-        with open(usuariotelegram+'.json', 'w') as file:
-            json.dump(json_bot, file, indent=4)
-
+        datasession[str(user.id)]["cantidad actual"] = int(text)
+    logger.info("Capacidad : %s", "hola")
+    update.message.reply_text('Muchas gracias, su capacidad actual ha sido actualizada')
+    write_session(user.username, datasession)
     return ConversationHandler.END
 
 
 def cancel(update, context):
     user = update.message.from_user
-    logger.info("User %s canceled the conversation.", user.first_name)
-    update.message.reply_text('Bye! I hope we can talk again some day.',
-                              reply_markup=ReplyKeyboardRemove())
+    logger.info(f"User {user.first_name} (@{user.username}) canceled the conversation.")
+    update.message.reply_text('Operación canceladda. ¡Seguimos en contacto!', reply_markup=ReplyKeyboardRemove())
 
     return ConversationHandler.END
 
@@ -101,6 +86,27 @@ def error(update, context):
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
+def add_masks(update, context):
+    user = update.message.from_user
+    text = update.message.text
+    datasession = load_datasession(user)
+    if " " in text:
+        text = text.split(" ")
+        logger.info("Capacidad : %s", text[1])
+        Produccionactual = text[1]
+        if "+" in Produccionactual:
+            datasession[str(user.id)]["cantidad actual"] += int(Produccionactual.replace("+", ""))
+        elif "-" in text:
+            datasession[str(user.id)]["cantidad actual"] -= int(Produccionactual.replace("-", ""))
+        else:
+            datasession[str(user.id)]["cantidad actual"] += int(Produccionactual)
+        logger.info("Capacidad : %s", Produccionactual)
+        update.message.reply_text('Muchas gracias, su capacidad actual ha sido actualizada')
+        write_session(user.username, datasession)
+        return ConversationHandler.END
+    else:
+        update.message.reply_text('A continuación, indica la cantidad actual de productos fabricados: ')
+        return CAPACTUAL
 
 
 def main():
@@ -113,17 +119,16 @@ def main():
 
     # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start), CommandHandler('stock', Capactual) ],
+        entry_points=[CommandHandler('start', start), CommandHandler('stock', add_masks)],
 
         states={
             TIPOUSUARIO: [MessageHandler(Filters.regex('^(Maker|Solicitante|Other)$'), tipousuario)],
 
-            CIUDAD: [MessageHandler(Filters.regex('^(Cáceres|Badajoz|Valverde de Leganés|Merida|Zafra|Montijo|Miajadas|Logrosan|Plasencia|Almendralejo|Montanchez|Don Benito, Villanueva de la Serena|Sierra de Gata-Moraleja|Other)$'), Ciudad)
-                    ],
-
+            CIUDAD: [MessageHandler(Filters.regex(
+                '^(Cáceres|Badajoz|Valverde de Leganés|Merida|Zafra|Montijo|Miajadas|Logrosan|Plasencia|Almendralejo|Montanchez|Don Benito, Villanueva de la Serena|Sierra de Gata-Moraleja|Other)$'),
+                Ciudad)],
             CAPACTUAL: [MessageHandler(Filters.text, Capactual)]
 
-            #DIRECCION: [MessageHandler(Filters.text, address)]
         },
 
         fallbacks=[CommandHandler('cancel', cancel)]
@@ -139,6 +144,7 @@ def main():
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
+
 
 if __name__ == '__main__':
     main()
