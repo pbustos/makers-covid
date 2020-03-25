@@ -10,8 +10,8 @@ from collections import defaultdict
 from logging import handlers
 
 import yaml
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit, send
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit, send, join_room, leave_room
 
 import dictdiffer
 
@@ -49,21 +49,39 @@ app = Flask(__name__)
 app.debug = False
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*")
+clients = []
 
 @socketio.on('connect')
 def handle_connection():
     logging.info("Direct data petition connection")
     with open(os.path.join(CURRENT_DIR,'data_Caceres.json'), 'r') as file:
+        
         data = json.load(file)
+        room = request.sid
+        clients.append(room)
+        join_room(room)
+
         try:
-            socketio.emit('connection_response', {'data': data})
+            socketio.emit('connection_response', {'data': data}, room=room)
         except Exception as e:
             logging.exception("Problem emitting socketio: connection_response")
+
+
+@socketio.on('close')
+def disconnect():
+    logging.info("Client left")
+    room = request.sid
+    clients.remove(room)
+    leave_room(room)
+
+    
+
 
 def update(update):
     logging.info("Broadcasting update")
     try:
-        socketio.emit('update', { "data" : update}, broadcast=True)
+        if len(clients) > 0:
+            socketio.emit('update', { "data" : update}, broadcast=True)
     except Exception as e:
         logging.exception("Problem emitting socketio: update")
 

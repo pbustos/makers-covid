@@ -10,6 +10,7 @@ class CovidMakers(Service):
         self.response.payload = """
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -35,7 +36,7 @@ class CovidMakers(Service):
     <script src="http://158.49.112.127:11223/sidebar_leaflet_js"></script>
     <link rel="stylesheet" href="http://158.49.112.127:11223/sidebar_leaflet_css" />
     <script src="https://cdn.jsdelivr.net/npm/json-formatter-js@2.3.4/dist/json-formatter.umd.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/1.4.0/json2html.min.js"></script>
     <style>
         #mapid {
             position: absolute;
@@ -57,6 +58,10 @@ class CovidMakers(Service):
         .padding-left-3rem {
             padding-left: 3rem;
         }
+        
+        .json-formatter-toggler-link {
+            visibility: hidden;
+        }
     </style>
     <title>Map Box Testing</title>
 </head>
@@ -69,6 +74,7 @@ class CovidMakers(Service):
             <ul role="tablist">
             <li><a href="#makers" role="tab">  <i class="fa fa-caret-left"></i></a></li>
             <li><a href="#demands" role="tab">  <i class="fa fa-caret-left"></i></a></li>
+            <li><a href="#total" role="tab">  <i class="fa fa-caret-left"></i></a></li>
 
             </ul>
         </div>
@@ -92,18 +98,29 @@ class CovidMakers(Service):
                     
                 </div>
             </div>
+
+            <div class="sidebar-pane"  id="total">
+                <h1 class="sidebar-header">
+                    Total
+                    <span class="sidebar-close"><i class="fa fa-caret-right"></i></span>
+                </h1>
+                <div id="total_html">
+                    
+                </div>
+            </div>
         </div>
     </div>
 
-    
+    <div id="info"></div>
     <script>
         //Create the map object and insert the div with id 'mapid'. The initial coordinates 39.47.. and -6.34.. are selected. 
         // and zoom 20.
-        var map = L.map('mapid', { zoomDelta: 0.5, zoomSnap: 0.5, zoomControl: false}).setView([39.47649, -6.37224], 20);
+        var map = L.map('mapid', { zoomDelta: 0.5, zoomSnap: 0.5,  minZoom: 7, zoomControl: false}).setView([39.47649, -6.37224], 20);
 
         //Loading the map display layer.
         var streets = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/streets-v10/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZmFoYW5pIiwiYSI6ImNqMTZiYm4xMjAyYjEzMnFxdmxnd2V3cHkifQ.-8Hau4tMxMiiSF-9D5AAYA', { maxZoom: 25 }).addTo(map);
         var sidebar =  L.control.sidebar('sidebar',  { position: 'right'} ).addTo(map);
+
 
         
         //Action executed at the end of a movement on the display.
@@ -122,15 +139,23 @@ class CovidMakers(Service):
         
         defineDiff();
         // Crea una nueva conexión.
-        //const socket = new WebSocket('ws://localhost:8080');
         var socket = io('ws://158.49.112.158:8443');
-        
+        //var socket = io('ws://127.0.0.1:8000');
+        //socket.nsp = '/general'
         socket.emit('connect', {data: 'Caceres'});
         
         setInterval(function(){ socket.emit('ping', {data : ""}); }, 900);
 
+
+        window.onbeforeunload = closingCode;
+        function closingCode(){
+            socket.emit('close', {})
+            socket.disconnect()
+            return null;
+        }
+
         socket.on('connection_response', function (msg) {
-            console.log('Message from server', msg.data);
+            console.log('Message from server', msg);
             res = msg.data;
             if (res) {
                 var keys = Object.keys(res.demand);
@@ -151,16 +176,55 @@ class CovidMakers(Service):
                     }
                 });
 
-                var formatter = new JSONFormatter(makers);
+              
+                var formatter = new JSONFormatter(makers.map((x) =>   JSON.parse(`
+                { 
+                    "Usuario" : "${x["usuario"]|| "Desconocido"}",  
+                    "Cantidad" : "${x["Cantidad"] || "Desconocido"}", 
+                    "Entregadas" : "${x["entregadas"]|| "Desconocido"}"  
+                }`) ));
                 $("#makers_html").html(formatter.render())
                 formatter.openAtDepth(5);
 
-                var formatter = new JSONFormatter(demand);
+                var formatter = new JSONFormatter(demand.map((x) =>   JSON.parse(`
+                {   
+                    "Organización" : "${x["usuario"]|| "Desconicido" }" ,
+                    "Cantidad necesaria actual" : "${x["cantidad necesaria actual"] || "Desconocido"}", 
+                    "Entregadas" : "${x["entregadas"] || "Desconocido"}" 
+                    
+                }`) 
+                ));
                 $("#demands_html").html(formatter.render())
+                formatter.openAtDepth(5);
+ 
+
+                var formatter = new JSONFormatter( JSON.parse(`
+                {   
+                    "Total disponibles" : ${makers.map((x) => {
+                        if (parseInt(x["cantidad actual"]) ) 
+                        { return parseInt(x["cantidad actual"]); }
+                        else { return 0;}
+                        }).reduce((acc, values) => acc + values )} ,
+                    "Cantidad necesaria actual total" : ${demand.map((x) => { 
+                        if (parseInt(x["cantidad necesaria actual"]) ) 
+                        { return parseInt(x["cantidad necesaria actual"]); }
+                        else { return 0; } 
+                    }).reduce((acc, values) => acc + values )} , 
+                    "Total entregadas " :  ${demand.map((x) => { 
+                        if (parseInt(x["entregadas"]) ) 
+                        { return parseInt(x["entregadas"]); }
+                        else { return 0; } 
+                    }).reduce((acc, values) => acc + values )} 
+                }`) 
+                );
+                $("#total_html").html(formatter.render())
+                $("#info").html(formatter.render())
+
                 formatter.openAtDepth(5);
                 //res.demand.push(...res.makers);
                 processNodes(makers, 'makers');
                 processNodes(demand, 'demands');
+
             }
         });
 
@@ -178,14 +242,15 @@ class CovidMakers(Service):
                 for (i = 0; i < res.length; i++) {
                     if (res[i][0] == 'change') {
                         if (res[i][1][0] == "makers") {
-                            var n = makers.filter((n) => n.usuario == res[i][1][1])[0];
+                            var n = makers.filter((n) => n["usuario"] == res[i][1][1])[0];
                             var attrs = res[i][1][2];
                             var values = res[i][2][1];
                             n[attrs] = values;
                         } else if (res[i][1][0] == 'demands') {
-                            var n = demand.filter((n) => n.usuario == res[i][1][1])[0];
+                            var n = demand.filter((n) => n["usuario"] == res[i][1][1])[0];
                             var attrs = res[i][1][2];
                             var values = res[i][2][1];
+
                             n[attrs] = values;
                         }
                     } else if (res[i][0] == 'add') {
@@ -208,16 +273,66 @@ class CovidMakers(Service):
                     }
                 }
 
-                var formatter = new JSONFormatter(makers);
+                var formatter = new JSONFormatter(makers.map((x) =>   JSON.parse(`
+                { 
+                    "Usuario" : "${x["usuario"]|| "Desconocido"}",  
+                    "Cantidad" : "${x["cantidad actual"] || "Desconocido"}", 
+                    "Entregadas" : "${x["entregadas"]|| "Desconocido"}"  
+                }`) ));
                 $("#makers_html").html(formatter.render())
                 formatter.openAtDepth(5);
 
-                var formatter = new JSONFormatter(demand);
-                $("#demands_html").html(formatter.render())
+                var formatter = new JSONFormatter(demand.map((x) =>   JSON.parse(`
+                {   
+                    "Organización" : "${x["usuario"]|| "Desconicido" }" ,
+                    "Cantidad necesaria actual" : "${x["cantidad necesaria actual"] || "Desconocido"}", 
+                    "Entregadas" : "${x["entregadas"] || "Desconocido"}" 
+                    
+                }`) 
+                ));
+                 $("#demands_html").html(formatter.render())
+
+                formatter.openAtDepth(5);
+
+
+                var formatter = new JSONFormatter( JSON.parse(`
+                {   
+                    "Total disponibles" : ${makers.map((x) => {
+                        if (parseInt(x["cantidad actual"]) ) 
+                        { return parseInt(x["cantidad actual"]); }
+                        else { return 0;}
+                        }).reduce((acc, values) => acc + values )} ,
+                    "Cantidad necesaria actual total" : ${demand.map((x) => { 
+                        if (parseInt(x["cantidad necesaria actual"]) ) 
+                        { return parseInt(x["cantidad necesaria actual"]); }
+                        else { return 0; } 
+                    }).reduce((acc, values) => acc + values )} , 
+                    "Total entregadas " :  ${demand.map((x) => { 
+                        if (parseInt(x["entregadas"]) ) 
+                        { return parseInt(x["entregadas"]); }
+                        else { return 0; } 
+                    }).reduce((acc, values) => acc + values )} 
+                }`) 
+                );
+                $("#total_html").html(formatter.render())
+                $("#info").html(formatter.render())
+
                 formatter.openAtDepth(5);
 
                 processNodes(makers, 'makers', true);
                 processNodes(demand, 'demands', true);
+
+                /*
+                    var strings =  $('.json-formatter-string');
+                    Object.keys(strings).forEach(k => {
+                        try {
+                        strings[k].innerText = strings[k].innerText.replace(/"/g, '') ;
+                        }
+                        catch {} 
+                })
+                */
+
+
             }
         });
 
@@ -358,21 +473,15 @@ class CovidMakers(Service):
             let n = nodesToDraw[nodeToAdd];
             //nodesToDraw[Object.keys(nodesToDraw)[nodeToAdd]];
             if (type == 'demands') { 
-                popUp = `Usuario: ${n.usuario} <br>
+                popUp = `Organizacion: ${n["usuario"]} <br>
                 Cantidad necesaria actual : ${n["cantidad necesaria actual"]} <br>
-                Entregadas : ${n.entregadas} <br>
-                Persona de contacto : ${n["persona de contacto"]}  <br>
-                Localidad : ${n.Localidad} <br>`;
+                Entregadas : ${n.entregadas} <br>`;
                 color = icon("#48C713", "demands", n["cantidad necesaria actual"]); 
             }
             if (type == 'makers') { 
-                popUp = `Usuario: ${n.usuario} <br>
-                Capacidad diaria : ${n[ "capacidad diaria"]} <br>
-                Cantidad actual : ${n["cantidad actual"]} <br>
-                Entregadas : ${n.entregadas} <br>
-                Capacidad diaria : ${n["capacidad diaria"]} <br>
-                Localidad : ${n.Localidad}<br>
-                Dirección : ${n["direccion"]}<br>`;
+                popUp = `Usuario Telegram: ${n["usuario"]} <br>
+                Cantidad  : ${n["cantidad actual"]} <br>
+                Entregadas : ${n.entregadas} <br>`;
             
                 color = icon("#FF00FF", "makers", n["cantidad actual"]) ; 
             }
@@ -396,7 +505,6 @@ class CovidMakers(Service):
                 if (layers[nodeToRemove]) {
                     map.removeLayer(layers[nodeToRemove]);
                 }
-                delete layers[nodeToRemove];
 
                 let index = layersIds[type].indexOf(nodeToRemove);
                 if (index > -1) {
