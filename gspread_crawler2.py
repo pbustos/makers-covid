@@ -141,6 +141,7 @@ class GSpreadCrawler2:
         return json
 
     def get_worksheet_data(self, worksheet):
+        logging.info("get_worksheet_data")
         final_json = {}
         try:
             self.change_sheet(worksheet)

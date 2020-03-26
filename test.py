@@ -122,6 +122,7 @@ class CovidUpdater(threading.Thread):
 
 if __name__ == '__main__':
     crawl = CovidUpdater()
+    logging.info("Starting thread")
     crawl.start()
     try:
         socketio.run(app, host='0.0.0.0', port=SOCKETIO_PORT, log_output=False, debug=False)
