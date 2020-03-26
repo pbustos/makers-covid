@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle
 import gspread
@@ -10,23 +11,28 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import utils
 
 import os
+
+logger = logging.getLogger(__name__)
+
+
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN_PATH = os.path.join(CURRENT_DIR, 'token.pickle')
 CREDENTIALS_PATH = os.path.join(CURRENT_DIR, 'credentials.json')
 CONFIG_PATH = os.path.join(CURRENT_DIR, 'config.yml')
 
-with open(CONFIG_PATH, 'r' ,encoding='utf8') as file:
+with open(CONFIG_PATH, 'r', encoding='utf8') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
     SPREAD_SHEET_URL = config["SPREAD_SHEET_URL"]
     SHEET_DATA = config["SHEET_DATA"]
     SCOPES = config["SCOPES"]
     SOCKETIO_PORT = config["SOCKETIO_PORT"]
 
-class MyCredentials (object):
-    def __init__ (self, access_token=None):
+
+class MyCredentials(object):
+    def __init__(self, access_token=None):
         self.access_token = access_token
 
-    def refresh (self, http):
+    def refresh(self, http):
         self.access_token = self.readCredentials(CREDENTIALS_PATH).token
 
     def readCredentials(self, file_name):
@@ -49,6 +55,7 @@ class MyCredentials (object):
             with open(TOKEN_PATH, 'wb') as token:
                 pickle.dump(creds, token)
         return creds
+
 
 class GSpreadCrawler2:
     def __init__(self):
@@ -79,7 +86,12 @@ class GSpreadCrawler2:
             self.worksheet = self.spreadsheet.get_worksheet(sheet)
         elif isinstance(sheet, str):
             self.worksheet = self.spreadsheet.worksheet(sheet)
+        else:
+            logger.error("Invalid sheet type %s" % str(type(sheet)))
+
         self.worksheet_data = np.array(self.worksheet.get_all_values())
+
+
 
     def update_stock(self):
         stock_column_range = SHEET_DATA[self.worksheet.title]["STOCK_COLUMN_RANGE"]
@@ -87,8 +99,8 @@ class GSpreadCrawler2:
         stock_headers_map = SHEET_DATA[self.worksheet.title]["STOCK_HEADERS_MAP"]
         stock_column_types = SHEET_DATA[self.worksheet.title]["STOCK_COLUMN_TYPES"]
         stock_ignored_columns = SHEET_DATA[self.worksheet.title]["STOCK_IGNORED_COLUMNS"]
-        return self.update_subtable(stock_column_range, stock_initial_column, stock_headers_map, stock_column_types, stock_ignored_columns)
-
+        return self.update_subtable(stock_column_range, stock_initial_column, stock_headers_map, stock_column_types,
+                                    stock_ignored_columns)
 
     def update_demand(self):
         demand_column_range = SHEET_DATA[self.worksheet.title]["DEMAND_COLUMN_RANGE"]
@@ -96,8 +108,8 @@ class GSpreadCrawler2:
         demand_headers_map = SHEET_DATA[self.worksheet.title]["DEMAND_HEADERS_MAP"]
         demand_column_types = SHEET_DATA[self.worksheet.title]["DEMAND_COLUMN_TYPES"]
         demand_ignored_columns = SHEET_DATA[self.worksheet.title]["DEMAND_IGNORED_COLUMNS"]
-        return self.update_subtable(demand_column_range, demand_initial_column, demand_headers_map, demand_column_types, demand_ignored_columns)
-
+        return self.update_subtable(demand_column_range, demand_initial_column, demand_headers_map, demand_column_types,
+                                    demand_ignored_columns)
 
     def update_subtable(self, column_range, initial_row, headers_mapping, types_map, ignored_columns):
         init_column = utils.char_to_index(column_range[0]) - 1
@@ -123,20 +135,27 @@ class GSpreadCrawler2:
             row_values = utils.remove_ignored_columns(ignored_columns, row_values)
             if row_values[0] != '':
                 row_values = utils.reasign_type(types_map, row_values)
-                row_dict = dict(zip(header_values,row_values))
+                row_dict = dict(zip(header_values, row_values))
                 row_dict["Localidad"] = self.worksheet.title
-                json[row_values[0]]= (row_dict)
+                json[row_values[0]] = (row_dict)
         return json
 
     def get_worksheet_data(self, worksheet):
-        self.change_sheet(worksheet)
         final_json = {}
-        final_json["demand"] = self.update_demand()
-        final_json["makers"] = self.update_stock()
-        return final_json
+        try:
+            self.change_sheet(worksheet)
+        except Exception as e:
+            logger.exception("There was a problem while trying to get the data from the worksheet %s" % worksheet)
+            logger.exception("Exception %s" % e)
+        else:
+            final_json["demand"] = self.update_demand()
+            final_json["makers"] = self.update_stock()
+        finally:
+            return final_json
+
 
 if __name__ == '__main__':
-    a = GSpreadCrawler()
+    a = GSpreadCrawler2()
     a.change_sheet("Caceres")
     a.update_stock()
     pass
