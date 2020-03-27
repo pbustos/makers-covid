@@ -7,6 +7,8 @@ import yaml
 import unidecode
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2 import service_account
+from oauth2client.service_account import ServiceAccountCredentials
 
 import utils
 
@@ -17,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN_PATH = os.path.join(CURRENT_DIR, 'token.pickle')
-CREDENTIALS_PATH = os.path.join(CURRENT_DIR, 'credentials.json')
+#CREDENTIALS_PATH = os.path.join(CURRENT_DIR, 'credentials.json')
+CREDENTIALS_PATH = os.path.join(CURRENT_DIR, 'mapas-271913-30a1383d8e1b.json')
 CONFIG_PATH = os.path.join(CURRENT_DIR, 'config.yml')
 
 with open(CONFIG_PATH, 'r', encoding='utf8') as file:
@@ -27,7 +30,9 @@ with open(CONFIG_PATH, 'r', encoding='utf8') as file:
     SCOPES = config["SCOPES"]
     SOCKETIO_PORT = config["SOCKETIO_PORT"]
 
+mycreds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_PATH, SCOPES)
 
+# TODO ESTO YA NO VALE
 class MyCredentials(object):
     def __init__(self, access_token=None):
         self.access_token = access_token
@@ -78,7 +83,7 @@ class GSpreadCrawler2:
             self.__spreadsheet = self.__conn.open_by_url(SPREAD_SHEET_URL)
 
     def __init_conn(self):
-        mycreds = MyCredentials()
+        #mycreds = MyCredentials()
         self.__conn = gspread.authorize(mycreds)
 
     def change_sheet(self, sheet):
