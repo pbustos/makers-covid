@@ -29,8 +29,8 @@ with open(CONFIG_PATH, 'r', encoding='utf8') as file:
     SHEET_DATA = config["SHEET_DATA"]
     SCOPES = config["SCOPES"]
     SOCKETIO_PORT = config["SOCKETIO_PORT"]
-
-mycreds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_PATH, SCOPES)
+    
+MYCREDS = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_PATH, SCOPES)
 
 # TODO ESTO YA NO VALE
 class MyCredentials(object):
@@ -84,7 +84,7 @@ class GSpreadCrawler2:
 
     def __init_conn(self):
         #mycreds = MyCredentials()
-        self.__conn = gspread.authorize(mycreds)
+        self.__conn = gspread.authorize(MYCREDS)
 
     def change_sheet(self, sheet):
         if isinstance(sheet, int):
@@ -93,7 +93,8 @@ class GSpreadCrawler2:
             self.worksheet = self.spreadsheet.worksheet(sheet)
         else:
             logger.error("Invalid sheet type %s" % str(type(sheet)))
-
+        if MYCREDS.access_token_expired:
+            self.__conn.login()  # refreshes the token
         self.worksheet_data = np.array(self.worksheet.get_all_values())
 
 
