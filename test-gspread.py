@@ -7,9 +7,15 @@ import json
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
+from oauth2client.service_account import ServiceAccountCredentials
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+SERVICE_ACCOUNT_FILE = 'mapas-271913-30a1383d8e1b.json'
+
+#mycreds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+mycreds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, SCOPES)
 
 def readCredentials(file_name):
     ## Initialize Sheets API
@@ -39,32 +45,26 @@ class MyCredentials (object):
   def refresh (self, http):
     self.access_token = readCredentials('credentials.json').token
     
-mycreds = MyCredentials()
+
+#mycreds = MyCredentials()
+
 gc = gspread.authorize(mycreds)
-makers_sheet = gc.open_by_url('https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit#gid=1653540701')
-#print(makers_sheet.worksheets())
-
-caceres = makers_sheet.get_worksheet(7)
-print(caceres)
-stock = dict()
-
-stock_cols_names = ('B4','C4','D4','E4','F4')
-stock_cols_numbers = range(2,7)
+makers_sheet = gc.open_by_url('https://docs.google.com/spreadsheets/d/1uWdmNRFeJNpwg0keMAodzf3xAXCL1cvz9mPFfdUcHmQ/edit?ts=5e7b4100#gid=1873691210')
+print(makers_sheet.worksheets())
+caceres = makers_sheet.worksheet('Caceres')
+print(caceres.get_all_values())
 
 
+# stock = dict()
 
-for c,n in it.zip_longest(stock_cols_names,stock_cols_numbers):
-    name = str(caceres.acell(c).value)
-    stock[name] = caceres.col_values(n)[4:-1]
+# stock_cols_names = ('B4','C4','D4','E4','F4')
+# stock_cols_numbers = range(2,7)
 
-stockA = copy.deepcopy(stock)
-stockA['Capacidad diaria'][0] = 100
-common_pairs = {key: stock[key] for key in stock if key in stockA and stock[key] != stockA[key]}
-#print (common_pairs)
-print(json.dumps(common_pairs,sort_keys=True, indent=4))
 
-    
 
+# for c,n in it.zip_longest(stock_cols_names,stock_cols_numbers):
+#     name = str(caceres.acell(c).value)
+#     stock[name] = caceres.col_values(n)[4:-1]
 
 
 
