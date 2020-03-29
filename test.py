@@ -20,6 +20,8 @@ from gspread_crawler import GSpreadCrawler
 from gspread_crawler2 import GSpreadCrawler2
 from xlsx_crawler import XLSXCrawler
 
+from persistence import Persistence
+
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOGFILE = os.path.join(CURRENT_DIR, "{0}/{1}.log").format("logs", "test.py")
 
@@ -56,7 +58,8 @@ def handle_connection():
     logging.info("Direct data petition connection")
     with open(os.path.join(CURRENT_DIR,'data_Caceres.json'), 'r') as file:
         
-        data = json.load(file)
+        #data = json.load(file)
+        data = CovidUpdater.persistence.getLast()
         room = request.sid
         clients.append(room)
         join_room(room)
@@ -98,6 +101,8 @@ class CovidUpdater(threading.Thread):
         elif config["crawler"] == "gspread2":
             self.__info_getter = GSpreadCrawler2()
 
+        self.persistence = Persistence()
+
     def update_all(self):
         for table in SHEET_DATA.keys():
             final_json = self.__info_getter.get_worksheet_data(table)
@@ -110,6 +115,7 @@ class CovidUpdater(threading.Thread):
                 logging.info(list_diff_result)
                 with open(os.path.join(CURRENT_DIR,'data_'+table+'.json'), 'w') as outfile:
                     json.dump(final_json, outfile, indent=4)
+                    self.persistence.insert(final_json)
                 with open(os.path.join(CURRENT_DIR,'last_update_'+table+'.json'), 'w') as outfile:
                     json.dump(list_diff_result, outfile, indent=4)
 
@@ -117,7 +123,7 @@ class CovidUpdater(threading.Thread):
         while(True):
             logging.info("compute")
             self.update_all()
-            time.sleep(10)
+            time.sleep(30)
 
 
 if __name__ == '__main__':
